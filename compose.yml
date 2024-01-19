@@ -1,0 +1,28 @@
+version: "3.9"
+services:
+  decision-maker-database:
+    image: postgres:16
+    container_name: decision-maker-database
+    restart: always
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: decision-maker
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      TZ: Europe/Berlin
+    volumes:
+      - ./data:/var/lib/postgresql/data
+
+  decision-maker:
+    build:
+      context: .
+    container_name: decision-maker
+    restart: always
+    ports:
+      - "3002:3002"
+
+networks:
+  default:
+    name: decision-maker-internal
+
