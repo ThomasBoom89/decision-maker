@@ -1,8 +1,7 @@
 package main
 
 import (
-	"errors"
-	"fmt"
+	"github.com/ThomasBoom89/decision-maker/internal/configuration"
 	"github.com/ThomasBoom89/decision-maker/internal/database"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
@@ -12,10 +11,12 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
-	"os"
 )
 
 func main() {
+	loader := configuration.Loader{}
+	databaseConfiguration := loader.LoadDatabaseConfiguration()
+
 	engine := html.New("./views", ".html")
 
 	app := fiber.New(fiber.Config{
@@ -36,27 +37,16 @@ func main() {
 		})
 	})
 
-	dsn := "host=decision-maker-database user=root password=root dbname=decision-maker port=5432 sslmode=disable TimeZone=Europe/Berlin"
-	//dsn := "host=localhost user=root password=root dbname=decision-maker port=5433 sslmode=disable TimeZone=Europe/Berlin"
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	databaseConnection, err := gorm.Open(postgres.Open(databaseConfiguration.GetPostgresDSN()), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
 
-	migrator := database.NewMigrator(db)
+	migrator := database.NewMigrator(databaseConnection)
 	err = migrator.Migrate()
 	if err != nil {
 		panic(err)
 	}
 
 	log.Fatal(app.Listen(":3000"))
-}
-
-func getFromEnv(key string) string {
-	value, err := os.LookupEnv(key)
-	if err {
-		panic(errors.New(fmt.Sprint("Missing key: ", key, " from environment")))
-	}
-
-	return value
 }
