@@ -6,3 +6,4 @@ views/index.html
 public/**
 !public/assets
 !public/assets/**
+main
