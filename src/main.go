@@ -49,7 +49,7 @@ func main() {
 		panic(err)
 	}
 
-	log.Fatal(app.Listen(":3002"))
+	log.Fatal(app.Listen(":3000"))
 }
 
 func getFromEnv(key string) string {
