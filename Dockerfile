@@ -13,6 +13,9 @@ RUN npm install
 RUN npm run build
 
 FROM scratch AS Production
+
+USER 1000
+
 WORKDIR /app
 
 COPY --from=Builder /app/decision-maker /app
