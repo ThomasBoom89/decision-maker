@@ -1,4 +1,5 @@
 dev:
+	npm i
 	docker compose -f compose.yml -f compose.development.yml down
 	docker compose -f compose.yml -f compose.development.yml up --build -d
 
