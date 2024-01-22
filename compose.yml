@@ -15,6 +15,8 @@ services:
       target: Production
     container_name: decision-maker
     restart: always
+    depends_on:
+      - decision-maker-database
     environment:
       DATABASE_HOST: ${DATABASE_HOST}
       DATABASE_NAME: ${POSTGRES_DB}
