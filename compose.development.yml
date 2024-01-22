@@ -1,12 +1,16 @@
 version: "3.9"
 services:
   decision-maker-database:
+    env_file:
+      - .env.dev
     ports:
       - "5433:5432"
     volumes:
       - ./data:/var/lib/postgresql/data
 
   decision-maker:
+    env_file:
+      - .env.dev
     build:
       target: Development
     ports:

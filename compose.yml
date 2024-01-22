@@ -5,16 +5,22 @@ services:
     container_name: decision-maker-database
     restart: always
     environment:
-      POSTGRES_DB: decision-maker
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: root
-      TZ: Europe/Berlin
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: ${TZ}
 
   decision-maker:
     build:
       target: Production
     container_name: decision-maker
     restart: always
+    environment:
+      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_NAME: ${POSTGRES_DB}
+      DATABASE_USERNAME: ${POSTGRES_USER}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE_TIMEZONE: ${TZ}
 
 networks:
   default:
