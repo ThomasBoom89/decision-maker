@@ -1,8 +1,6 @@
 package database
 
 import (
-	"errors"
-	"fmt"
 	"gorm.io/gorm"
 )
 
@@ -23,9 +21,14 @@ func NewConfigurationRepository(database *gorm.DB) *ConfigurationRepository {
 
 func (R *ConfigurationRepository) GetByVersion(version uint) (*Configuration, error) {
 	var configuration Configuration
-	affectedRows := R.database.Debug().Model(Configuration{}).Where("version = ?", version).Preload("Parameters").First(&configuration).RowsAffected
-	if affectedRows == 0 {
-		return nil, errors.New(fmt.Sprint("no configuration with version ", version, " found!"))
+	result := R.database.Debug().Model(Configuration{}).Where("version = ?", version).Preload("Parameters").First(&configuration)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return nil, nil
 	}
 
 	return &configuration, nil
