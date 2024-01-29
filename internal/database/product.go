@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"gorm.io/gorm"
 )
 
@@ -24,11 +25,36 @@ func NewProductRepository(database *gorm.DB) *ProductRepository {
 func (P *ProductRepository) GetByConfiguration(configurationId uint) ([]Product, error) {
 	var product []Product
 	err := P.database.Model(Product{}).Where("configuration_id = ?", configurationId).Preload("ParameterValues").Find(&product).Error
-	if err == nil {
+	if err != nil {
 		return nil, err
 	}
 
 	return product, nil
+}
+
+func (P *ProductRepository) InsertOne(configurationId uint, name string, parameterValuesMap map[uint]string, testconfigurationMap map[string]string) {
+	var parameterValues []ParameterValue
+	for key, value := range parameterValuesMap {
+		parameterValues = append(parameterValues, ParameterValue{
+			ParameterID: key,
+			Value:       value,
+		})
+	}
+
+	product := Product{
+		Model:           gorm.Model{},
+		ConfigurationID: configurationId,
+		Name:            name,
+		ParameterValues: parameterValues,
+		Changelog:       nil,
+		TestConfiguration: TestConfiguration{
+			Configuration: testconfigurationMap,
+		},
+	}
+
+	P.database.Create(&product)
+	P.database.Save(&product)
+	fmt.Println(product)
 }
 
 func (P *ProductRepository) GetProductIdsByConfiguration(configurationId uint) ([]uint, error) {
