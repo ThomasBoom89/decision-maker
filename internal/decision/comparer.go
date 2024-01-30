@@ -130,7 +130,7 @@ type TestConfigurationFullCompare[T int64 | float64] struct {
 type TestConfigurationEqualCompare[T string | bool] struct {
 }
 
-func (T *TestConfigurationFullCompare[T]) CompareFull(schmalue T, value T, compare Compare) bool {
+func (C *TestConfigurationFullCompare[T]) CompareFull(schmalue T, value T, compare Compare) bool {
 	switch compare {
 	case GreaterThan:
 		return schmalue < value
@@ -147,7 +147,7 @@ func (T *TestConfigurationFullCompare[T]) CompareFull(schmalue T, value T, compa
 	}
 }
 
-func (T *TestConfigurationEqualCompare[T]) CompareEqual(schmalue T, value T, compare Compare) bool {
+func (D *TestConfigurationEqualCompare[T]) CompareEqual(schmalue T, value T, compare Compare) bool {
 	switch compare {
 	case Equal, NotEqual:
 		return schmalue == value
