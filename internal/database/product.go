@@ -32,7 +32,7 @@ func (P *ProductRepository) GetByConfiguration(configurationId uint) ([]Product,
 	return product, nil
 }
 
-func (P *ProductRepository) InsertOne(configurationId uint, name string, parameterValuesMap map[uint]string, testconfigurationMap map[string]string) {
+func (P *ProductRepository) InsertOne(configurationId uint, name string, parameterValuesMap map[uint]string, testConfigurationMap map[string]string) {
 	var parameterValues []ParameterValue
 	for key, value := range parameterValuesMap {
 		parameterValues = append(parameterValues, ParameterValue{
@@ -48,7 +48,7 @@ func (P *ProductRepository) InsertOne(configurationId uint, name string, paramet
 		ParameterValues: parameterValues,
 		Changelog:       nil,
 		TestConfiguration: TestConfiguration{
-			Configuration: testconfigurationMap,
+			Configuration: testConfigurationMap,
 		},
 	}
 
