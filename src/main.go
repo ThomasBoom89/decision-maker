@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/ThomasBoom89/decision-maker/internal/configuration"
 	"github.com/ThomasBoom89/decision-maker/internal/database"
+	"github.com/ThomasBoom89/decision-maker/internal/decision"
+	"github.com/ThomasBoom89/decision-maker/internal/rendering"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -45,12 +47,12 @@ func main() {
 		panic(err)
 	}
 
-	app.Get("/", func(c *fiber.Ctx) error {
-		// Render index template
-		return c.Render("index", fiber.Map{
-			"Title": "Hello, Twitch!",
-		})
-	})
+	// rendering frontend views
+	views := app.Group("/")
+	rendering.SetUpRoutes(views, databaseConnection)
+
+	// api
+	//api := app.Group("/api")
 
 	app.Get("/match/:version", func(c *fiber.Ctx) error {
 		version, err := strconv.Atoi(c.Params("version"))
