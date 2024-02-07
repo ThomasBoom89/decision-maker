@@ -1,0 +1,23 @@
+<section id="configuration_edit">
+    <p>Aktuelle Konfiguration</p>
+    <p>Version: {{ .Configuration.Version}}</p>
+    <p>Status: {{if .Configuration.Active }} active {{else}} inactive {{end}}</p>
+    {{range .Configuration.Parameters}}
+    <p>{{.Name}} {{.Type}} {{.Comparer}}</p>
+    {{end}}
+    <form hx-post="/configuration/create/parameter/{{.Configuration.Version}}" hx-target="#configuration_edit">
+        <label for="name">Name:</label>
+        <input type="text" name="name" id="name" placeholder="insert name...">
+        <label for="type">Add </label>
+        <select name="type" id="type" hx-get="/configuration/comparer" hx-trigger="change" hx-swap="innerHTML"
+                hx-target="#comparer_outlet" required>
+            {{range $type := .ParameterTypes}}
+            <option value="{{ $type }}">{{$type}}</option>
+            {{end}}
+        </select>
+        <selection id="comparer_outlet">
+            {{template "configuration/parameter_compare" .}}
+        </selection>
+        <input type="submit" value="submit">
+    </form>
+</section>

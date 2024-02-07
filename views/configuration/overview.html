@@ -1,0 +1,15 @@
+{{template "index" .}}
+<section class="text-center flex flex-col w-full">
+    <h1>Configurations</h1>
+    <table class="m-auto max-w-[30%]">
+        <tr>
+            <th>Version</th>
+            <th>Status</th>
+            <th></th>
+            <th></th>
+        </tr>
+        {{range .Configurations}}
+        {{template "configuration/overview_row" .}}
+        {{end}}
+    </table>
+</section>

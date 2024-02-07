@@ -1,0 +1,14 @@
+<tr id="row{{.Version}}">
+    <td>{{.Version}}</td>
+    <td>{{if .Active}} active {{else}} inactive {{end}}</td>
+    <td>
+        <a href="/configuration/edit/{{.Version}}" class="{{if .Active}} pointer-events-none bg-red-500 {{end}}">
+            edit
+    </td>
+    <td>
+        <button hx-get="/configuration/status/change/{{.Version}}"
+                hx-target="#row{{.Version}}"
+                hx-swap="outerHTML"
+        > {{if .Active}} deactivate {{else}} activate {{end}}
+    </td>
+</tr>
