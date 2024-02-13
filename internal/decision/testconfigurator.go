@@ -19,7 +19,7 @@ func NewTestConfigurator() *TestConfigurator {
 	return &TestConfigurator{}
 }
 
-func (T *TestConfigurator) Create(valueTypeComparers []ValueTypeComparer) map[string]string {
+func (T *TestConfigurator) Create(valueTypeComparers map[uint]ValueTypeComparer) map[string]string {
 	ret := make(map[string]string)
 	for _, valueTypeComparer := range valueTypeComparers {
 		var value string
