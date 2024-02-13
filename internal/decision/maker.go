@@ -2,20 +2,30 @@ package decision
 
 type Maker struct {
 	stringCaster *StringCaster
-	comparer     Comparer
+	comparer     *Comparer
 }
 
 func NewMaker() *Maker {
 	return &Maker{
 		stringCaster: &StringCaster{},
-		comparer:     &RealComparer{},
+		comparer: &Comparer{
+			int:    &RealFullCompare[int64]{},
+			float:  &RealFullCompare[float64]{},
+			string: &RealEqualCompare[string]{},
+			bool:   &RealEqualCompare[bool]{},
+		},
 	}
 }
 
 func NewMakerForTestConfiguration() *Maker {
 	return &Maker{
 		stringCaster: &StringCaster{},
-		comparer:     &TestConfigurationComparer{},
+		comparer: &Comparer{
+			int:    &TestConfigurationFullCompare[int64]{},
+			float:  &TestConfigurationFullCompare[float64]{},
+			string: &TestConfigurationEqualCompare[string]{},
+			bool:   &TestConfigurationEqualCompare[bool]{},
+		},
 	}
 }
 
