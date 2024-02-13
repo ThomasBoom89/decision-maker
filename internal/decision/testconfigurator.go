@@ -15,8 +15,12 @@ type ValueTypeComparer struct {
 	Comparer Compare
 }
 
+func NewTestConfigurator() *TestConfigurator {
+	return &TestConfigurator{}
+}
+
 func (T *TestConfigurator) Create(valueTypeComparers []ValueTypeComparer) map[string]string {
-	var ret map[string]string
+	ret := make(map[string]string)
 	for _, valueTypeComparer := range valueTypeComparers {
 		var value string
 		switch valueTypeComparer.Type {
