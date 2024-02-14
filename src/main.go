@@ -1,11 +1,8 @@
 package main
 
 import (
-	"errors"
-	"fmt"
 	"github.com/ThomasBoom89/decision-maker/internal/configuration"
 	"github.com/ThomasBoom89/decision-maker/internal/database"
-	"github.com/ThomasBoom89/decision-maker/internal/decision"
 	"github.com/ThomasBoom89/decision-maker/internal/rendering"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
@@ -15,8 +12,6 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
-	"strconv"
-	"strings"
 )
 
 func main() {
@@ -53,35 +48,5 @@ func main() {
 
 	// api
 	//api := app.Group("/api")
-
-	app.Get("/match/:version", func(c *fiber.Ctx) error {
-		version, err := strconv.Atoi(c.Params("version"))
-		if err != nil {
-			panic(err)
-		}
-		configurationRepository := database.NewConfigurationRepository(databaseConnection)
-		configurationByVersion, err := configurationRepository.GetByVersion(uint(version))
-		if err != nil {
-			//return http.StatusBadRequest
-			return err
-		}
-
-		queryMap := make(map[string]string)
-		for _, parameter := range configurationByVersion.Parameters {
-			value := c.Query(strings.ToLower(parameter.Name), "foobar")
-			if value == "foobar" {
-				//return http.StatusBadRequest
-				return errors.New(fmt.Sprint("query param missing: ", parameter.Name))
-			}
-			queryMap[parameter.Name] = value
-		}
-
-		return c.Render("testversion", fiber.Map{
-			"Version": version,
-			"Params":  c.Params("*"),
-			"Debug":   queryMap,
-		})
-	})
-
 	log.Fatal(app.Listen(":3000"))
 }
