@@ -1,7 +1,6 @@
 package database
 
 import (
-	"fmt"
 	"gorm.io/gorm"
 )
 
@@ -53,8 +52,6 @@ func (P *ProductRepository) InsertOne(configurationId uint, name string, paramet
 	}
 
 	P.database.Create(&product)
-	P.database.Save(&product)
-	fmt.Println(product)
 }
 
 func (P *ProductRepository) GetProductIdsByConfiguration(configurationId uint) ([]uint, error) {

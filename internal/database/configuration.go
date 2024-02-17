@@ -1,6 +1,7 @@
 package database
 
 import (
+	"github.com/ThomasBoom89/decision-maker/internal/decision"
 	"gorm.io/gorm"
 )
 
@@ -61,7 +62,7 @@ func (R *ConfigurationRepository) AppendParameter(configuration *Configuration, 
 	parameter := Parameter{
 		Name:     name,
 		Type:     parameterType,
-		Comparer: comparerType,
+		Comparer: decision.Compare(comparerType),
 	}
 	dummyConfiguration.ID = configuration.ID
 	err := R.database.Debug().Model(&dummyConfiguration).Association("Parameters").Append(&parameter)

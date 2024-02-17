@@ -15,8 +15,12 @@ type ValueTypeComparer struct {
 	Comparer Compare
 }
 
-func (T *TestConfigurator) Create(valueTypeComparers []ValueTypeComparer) map[string]string {
-	var ret map[string]string
+func NewTestConfigurator() *TestConfigurator {
+	return &TestConfigurator{}
+}
+
+func (T *TestConfigurator) Create(valueTypeComparers map[uint]ValueTypeComparer) map[string]string {
+	ret := make(map[string]string)
 	for _, valueTypeComparer := range valueTypeComparers {
 		var value string
 		switch valueTypeComparer.Type {
@@ -50,15 +54,13 @@ func (T *TestConfigurator) getForBool(value string, comparer Compare) string {
 
 func (T *TestConfigurator) getForInteger(value string, comparer Compare) string {
 	switch comparer {
-	case Equal, LowerEqual, GreaterEqual, NotEqual:
+	case Equal, NotEqual:
 		return value
-	case GreaterThan:
-		result := T.stringCaster.toInt(value)
-		result++
+	case GreaterThan, GreaterEqual:
+		result := int64(math.MaxInt64)
 		return T.stringCaster.fromInt(result)
-	case LowerThan:
-		result := T.stringCaster.toInt(value)
-		result--
+	case LowerThan, LowerEqual:
+		result := int64(math.MinInt64)
 		return T.stringCaster.fromInt(result)
 	default:
 		panic("darf nicht passieren")
@@ -76,16 +78,14 @@ func (T *TestConfigurator) getForString(value string, comparer Compare) string {
 
 func (T *TestConfigurator) getForFloat(value string, comparer Compare) string {
 	switch comparer {
-	case Equal, LowerEqual, GreaterEqual, NotEqual:
+	case Equal, NotEqual:
 		return value
-	case GreaterThan:
-		result := T.stringCaster.toFloat(value)
-		next := math.Nextafter(result, math.MaxFloat64)
+	case GreaterThan, GreaterEqual:
+		next := math.MaxFloat64
 		return T.stringCaster.fromFloat(next)
-	case LowerThan:
-		result := T.stringCaster.toFloat(value)
-		next := math.Nextafter(result, math.MaxFloat64)
-		return T.stringCaster.fromFloat(result - (next - result))
+	case LowerThan, LowerEqual:
+		next := math.MaxFloat64 * -1
+		return T.stringCaster.fromFloat(next)
 	default:
 		panic("darf nicht passieren")
 	}
