@@ -4,14 +4,14 @@ go 1.21
 
 require (
 	github.com/gofiber/fiber/v2 v2.52.1
-	github.com/gofiber/template/html/v2 v2.1.0
+	github.com/gofiber/template/html/v2 v2.1.1
 	gorm.io/driver/postgres v1.5.6
 	gorm.io/gorm v1.25.7
 )
 
 require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
-	github.com/gofiber/template v1.8.2 // indirect
+	github.com/gofiber/template v1.8.3 // indirect
 	github.com/gofiber/utils v1.1.0 // indirect
 	github.com/google/uuid v1.5.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
