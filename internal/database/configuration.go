@@ -25,9 +25,9 @@ func NewConfigurationRepository(database *gorm.DB) *ConfigurationRepository {
 func (R *ConfigurationRepository) GetByVersion(version uint) (*Configuration, error) {
 	var configuration Configuration
 	result := R.database.Debug().Model(Configuration{}).Where("version = ?", version).Preload("Parameters").First(&configuration)
-
-	if result.Error != nil {
-		return nil, result.Error
+	err := result.Error
+	if err != nil {
+		return nil, err
 	}
 
 	if result.RowsAffected == 0 {
@@ -39,9 +39,9 @@ func (R *ConfigurationRepository) GetByVersion(version uint) (*Configuration, er
 
 func (R *ConfigurationRepository) GetAll() ([]Configuration, error) {
 	var configurations []Configuration
-	result := R.database.Debug().Model(Configuration{}).Find(&configurations)
-	if result.Error != nil {
-		return nil, result.Error
+	err := R.database.Debug().Model(Configuration{}).Order("version DESC").Find(&configurations).Error
+	if err != nil {
+		return nil, err
 	}
 
 	return configurations, nil
@@ -73,4 +73,31 @@ func (R *ConfigurationRepository) AppendParameter(configuration *Configuration, 
 	configuration.Parameters = append(configuration.Parameters, parameter)
 
 	return configuration, nil
+}
+
+func (R *ConfigurationRepository) Create(version uint) (*Configuration, error) {
+	configuration := &Configuration{
+		Version:    version,
+		Active:     false,
+		Valid:      false,
+		Parameters: nil,
+		Products:   nil,
+	}
+	err := R.database.Debug().Create(configuration).Error
+	if err != nil {
+		panic(err)
+		return nil, err
+	}
+
+	return configuration, nil
+}
+
+func (R *ConfigurationRepository) GetNextVersion() uint {
+	var result uint
+	err := R.database.Debug().Model(Configuration{}).Select("MAX(version)+1 AS maxversion").Scan(&result).Error
+	if err != nil {
+		panic(err)
+	}
+
+	return result
 }
