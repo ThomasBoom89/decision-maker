@@ -1,0 +1,26 @@
+<div>
+    <section>
+        <h2>Test Configuration</h2>
+        {{ range $key, $value := .TestConfiguration }}
+        <p>{{ $key }} - {{ $value }}</p>
+        {{ end }}
+    </section>
+    <section>
+        <h2>Test Configuration Old Products</h2>
+        {{ range $key, $value := .TestConfigurationOldProducts }}
+        <p>{{ $key }}</p>
+        {{range $key1, $value1 := $value}}
+        <p>{{.ParameterName}}</p>
+        {{ end }}
+        {{ end }}
+    </section>
+    <section>
+        <h2>Old Configuration New Products</h2>
+        {{ range $key, $value := .OldTestConfigurationNewProduct }}
+        <p>{{ $key }}</p>
+        {{range $key1, $value1 := $value}}
+        <p>{{.ParameterName}}</p>
+        {{ end }}
+        {{ end }}
+    </section>
+</div>

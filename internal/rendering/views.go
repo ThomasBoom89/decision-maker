@@ -72,9 +72,9 @@ func SetUpRoutes(router fiber.Router, databaseConnection *gorm.DB) {
 		testConfiguration := testConfigurator.Create(values)
 
 		//decisionMaker := decision.NewMakerForTestConfiguration()
-		foobar(databaseConnection, configuration.ID, values, testConfiguration)
+		testConfigurationOldProducts := foobar(databaseConnection, configuration.ID, values, testConfiguration)
 		//barfoo(databaseConnection, configuration)
-		foobarfoo(databaseConnection, configuration, values)
+		oldTestConfigurationNewProduct := foobarfoo(databaseConnection, configuration, values)
 		// todo: test configuration logic
 		//fmt.Println("testcnfig:", testConfiguration)
 		//fmt.Println("parammap: ", parameterMap)
@@ -82,7 +82,11 @@ func SetUpRoutes(router fiber.Router, databaseConnection *gorm.DB) {
 		//productRepository := database.NewProductRepository(databaseConnection)
 		//productRepository.InsertOne(configuration.ID, name, parameterMap, testConfiguration)
 
-		return nil
+		return ctx.Render("product/diff", fiber.Map{
+			"TestConfiguration":              testConfiguration,
+			"TestConfigurationOldProducts":   testConfigurationOldProducts,
+			"OldTestConfigurationNewProduct": oldTestConfigurationNewProduct,
+		})
 	})
 
 	configurationGroup := router.Group("/configuration")
@@ -136,81 +140,101 @@ func SetUpRoutes(router fiber.Router, databaseConnection *gorm.DB) {
 		})
 	})
 
-	configurationGroup.Post("/create/parameter/:version", func(ctx *fiber.Ctx) error {
+	configurationGroup.Post("/create/parameter/:version?", func(ctx *fiber.Ctx) error {
 		parameterType := ctx.FormValue("type")
 		comparerType := ctx.FormValue("comparer")
 		name := ctx.FormValue("name")
-		version, _ := strconv.Atoi(ctx.Params("version"))
 		configurationRepository := database.NewConfigurationRepository(databaseConnection)
-		configuration, _ := configurationRepository.GetByVersion(uint(version))
+		var configuration *database.Configuration
+		if ctx.Params("version") == "" {
+			version := configurationRepository.GetNextVersion()
+			configuration, _ = configurationRepository.Create(version)
+		} else {
+			version, _ := strconv.Atoi(ctx.Params("version"))
+			configuration, _ = configurationRepository.GetByVersion(uint(version))
+		}
 		configuration, _ = configurationRepository.AppendParameter(configuration, name, parameterType, comparerType)
-		// todo: refactor
-		parameterTypes := []string{"int", "string", "float", "datetime", "bool"}
-		compareTypes := []string{"gt", "ge", "lt", "le", "eq", "ne"}
+
 		return ctx.Render("configuration/edit_form", fiber.Map{
 			"Title":          "Edit configuration",
-			"ParameterTypes": parameterTypes,
-			"CompareTypes":   compareTypes,
+			"ParameterTypes": getParameterTypes(),
+			"CompareTypes":   getCompareTypes(),
 			"Configuration":  configuration,
 		})
 	})
 }
 
+func getCompareTypes() []string {
+	return []string{"gt", "ge", "lt", "le", "eq", "ne"}
+}
+
+func getParameterTypes() []string {
+	return []string{"int", "string", "float", "datetime", "bool"}
+}
+
 /*
 Check if test configuration of new product will collide with existing product
 */
-func foobar(databaseConnection *gorm.DB, configurationId uint, parametersMap map[uint]decision.ValueTypeComparer, testConfiguration map[string]string) {
+func foobar(databaseConnection *gorm.DB, configurationId uint, parametersMap map[uint]decision.ValueTypeComparer, testConfiguration map[string]string) map[string][]Result {
 	productRepository := database.NewProductRepository(databaseConnection)
 	products, _ := productRepository.GetByConfiguration(configurationId)
 	fmt.Println(testConfiguration)
 	decisionMaker := decision.NewMakerForTestConfiguration()
 
+	result := make(map[string][]Result)
 	for _, product := range products {
 		if len(product.ParameterValues) == 0 {
 			continue
 		}
 		fmt.Println(product.ParameterValues[0].Value)
 		for _, parameterValue := range product.ParameterValues {
-			fmt.Println("parameterValue:", parameterValue.Value)
 			compareType := parametersMap[parameterValue.ParameterID]
-			//fmt.Println("compareType:", compareType)
-			fmt.Println("compareValue:", testConfiguration[compareType.Name])
-			fmt.Println("valueType:", compareType.Type)
-			fmt.Println("compareType:", compareType.Comparer)
-
-			// todo: save parameter to map
-			result := decisionMaker.Decide(parameterValue.Value, testConfiguration[compareType.Name], compareType.Comparer, parametersMap[parameterValue.ParameterID].Type)
-			fmt.Println(compareType.Name, " **result: ", result)
-			time.Sleep(time.Millisecond * 200)
+			decisionResult := decisionMaker.Decide(parameterValue.Value, testConfiguration[compareType.Name], compareType.Comparer, parametersMap[parameterValue.ParameterID].Type)
+			result[product.Name] = append(result[product.Name], Result{
+				ParameterName: compareType.Name,
+				TestValue:     testConfiguration[compareType.Name],
+				ProductValue:  parameterValue.Value,
+				CompareType:   compareType.Type,
+				Result:        decisionResult,
+			})
 			// todo: find unique match and return
-
 		}
 	}
+
+	return result
 }
 
 /*
 *
 Check if existing test configurations will match new product
 */
-func foobarfoo(databaseConnection *gorm.DB, configuration *database.Configuration, comparerMap map[uint]decision.ValueTypeComparer) {
+func foobarfoo(databaseConnection *gorm.DB, configuration *database.Configuration, comparerMap map[uint]decision.ValueTypeComparer) map[string][]Result {
 	productRepository := database.NewProductRepository(databaseConnection)
 	productIds, _ := productRepository.GetProductIdsByConfiguration(configuration.ID)
+	products, _ := productRepository.GetByConfiguration(configuration.ID)
 	testConfigurationRepository := database.NewTestConfigurationRepository(databaseConnection)
 	testConfigurations := testConfigurationRepository.GetByProductIds(productIds)
 	decisionMaker := decision.NewMakerForTestConfiguration()
-
+	productsMap := make(map[uint]string)
+	for _, product := range products {
+		productsMap[product.ID] = product.Name
+	}
+	result := make(map[string][]Result)
 	for _, testConfiguration := range testConfigurations {
 		for _, parameter := range configuration.Parameters {
 			comparer := comparerMap[parameter.ID]
-			fmt.Println("product parameter value:", comparer.Value)
-			fmt.Println("compareName:", comparer.Name)
-			fmt.Println("compareValue:", testConfiguration.Configuration[comparer.Name])
-			fmt.Println("valueType:", comparer.Type)
-			fmt.Println("compareType:", comparer.Comparer)
-			result := decisionMaker.Decide(comparer.Value, testConfiguration.Configuration[comparer.Name], comparer.Comparer, comparer.Type)
-			fmt.Println(comparer.Name, " result: ", result)
+			decisionResult := decisionMaker.Decide(comparer.Value, testConfiguration.Configuration[comparer.Name], comparer.Comparer, comparer.Type)
+			result[productsMap[testConfiguration.ProductID]] = append(result[productsMap[testConfiguration.ProductID]], Result{
+				ParameterName: parameter.Name,
+				TestValue:     testConfiguration.Configuration[comparer.Name],
+				ProductValue:  comparer.Value,
+				CompareType:   comparer.Type,
+				Result:        decisionResult,
+			})
 		}
 	}
+
+	return result
 }
 
 /*
@@ -260,4 +284,12 @@ func barfoo(databaseConnection *gorm.DB, configuration *database.Configuration) 
 		}
 	}
 
+}
+
+type Result struct {
+	ParameterName string
+	TestValue     string
+	ProductValue  string
+	CompareType   string
+	Result        bool
 }

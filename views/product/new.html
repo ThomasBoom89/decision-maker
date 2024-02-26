@@ -1,6 +1,6 @@
 {{template "index" .}}
 
-<form hx-post="/product/save" class="flex flex-col max-w-[20%] m-auto">
+<form hx-post="/product/save" hx-target="#output" class="flex flex-col max-w-[20%] m-auto">
     <label for="name">Name: </label><input type="text" name="name" id="name" placeholder="insert name...">
     <label for="version">Version: </label><input type="text" name="version" id="version" value="{{.Version}}">
     {{range .Parameter}}
@@ -10,4 +10,4 @@
 
     <input type="submit" value="save">
 </form>
-
+<div id="output"></div>
