@@ -7,7 +7,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 	"strconv"
-	"time"
 )
 
 func SetUpRoutes(router fiber.Router, databaseConnection *gorm.DB) {
@@ -91,6 +90,45 @@ func SetUpRoutes(router fiber.Router, databaseConnection *gorm.DB) {
 
 	configurationGroup := router.Group("/configuration")
 
+	configurationGroup.Get("/new", func(ctx *fiber.Ctx) error {
+
+		return ctx.Render("configuration/new", fiber.Map{
+			"Title":          "New Configuration",
+			"ParameterTypes": getParameterTypes(),
+			"CompareTypes":   getCompareTypes(),
+		})
+	})
+
+	configurationGroup.Get("/copy/:version", func(ctx *fiber.Ctx) error {
+		version, _ := strconv.Atoi(ctx.Params("version"))
+		configurationRepository := database.NewConfigurationRepository(databaseConnection)
+		configuration, _ := configurationRepository.GetByVersion(uint(version))
+
+		nextVersion := configurationRepository.GetNextVersion()
+		newConfiguration, _ := configurationRepository.Create(nextVersion)
+		for _, parameter := range configuration.Parameters {
+			newConfiguration, _ = configurationRepository.AppendParameter(newConfiguration, parameter.Name, parameter.Type, string(parameter.Comparer))
+		}
+
+		return ctx.Render("configuration/copy", fiber.Map{
+			"Title":          "Copy",
+			"Configuration":  newConfiguration,
+			"ParameterTypes": getParameterTypes(),
+			"CompareTypes":   getCompareTypes(),
+		})
+	})
+
+	configurationGroup.Get("/show/:version", func(ctx *fiber.Ctx) error {
+		version, _ := strconv.Atoi(ctx.Params("version"))
+		configurationRepository := database.NewConfigurationRepository(databaseConnection)
+		configuration, _ := configurationRepository.GetByVersion(uint(version))
+
+		return ctx.Render("configuration/show", fiber.Map{
+			"Title":         "Show",
+			"Configuration": configuration,
+		})
+	})
+
 	configurationGroup.Get("/overview", func(ctx *fiber.Ctx) error {
 		configurationRepository := database.NewConfigurationRepository(databaseConnection)
 		configurations, err := configurationRepository.GetAll()
@@ -110,13 +148,11 @@ func SetUpRoutes(router fiber.Router, databaseConnection *gorm.DB) {
 		if configuration.Active {
 			return ctx.Redirect("/configuration/overview", 302)
 		}
-		// todo: refactor
-		parameterTypes := []string{"int", "string", "float", "datetime", "bool"}
-		compareTypes := []string{"gt", "ge", "lt", "le", "eq", "ne"}
+
 		return ctx.Render("configuration/edit", fiber.Map{
 			"Title":          "Edit configuration",
-			"ParameterTypes": parameterTypes,
-			"CompareTypes":   compareTypes,
+			"ParameterTypes": getParameterTypes(),
+			"CompareTypes":   getCompareTypes(),
 			"Configuration":  configuration,
 		})
 	})

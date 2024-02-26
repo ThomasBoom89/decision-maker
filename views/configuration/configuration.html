@@ -1,0 +1,6 @@
+<p>Aktuelle Konfiguration</p>
+<p>Version: {{ .Configuration.Version}}</p>
+<p>Status: {{if .Configuration.Active }} active {{else}} inactive {{end}}</p>
+{{range .Configuration.Parameters}}
+<p>{{.Name}} {{.Type}} {{.Comparer}}</p>
+{{end}}

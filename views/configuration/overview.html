@@ -7,9 +7,15 @@
             <th>Status</th>
             <th></th>
             <th></th>
+            <th></th>
+            <th></th>
         </tr>
         {{range .Configurations}}
         {{template "configuration/overview_row" .}}
         {{end}}
     </table>
+    {{ if .Configurations }}
+    {{else}}
+    <a href="/configuration/new">New</a>
+    {{end}}
 </section>

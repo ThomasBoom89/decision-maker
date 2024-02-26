@@ -4,11 +4,23 @@
     <td>
         <a href="/configuration/edit/{{.Version}}" class="{{if .Active}} pointer-events-none bg-red-500 {{end}}">
             edit
+        </a>
     </td>
     <td>
         <button hx-get="/configuration/status/change/{{.Version}}"
                 hx-target="#row{{.Version}}"
                 hx-swap="outerHTML"
         > {{if .Active}} deactivate {{else}} activate {{end}}
+        </button>
+    </td>
+    <td>
+        <a href="/configuration/show/{{.Version}}">
+            show
+        </a>
+    </td>
+    <td>
+        <a href="/configuration/copy/{{.Version}}">
+            copy
+        </a>
     </td>
 </tr>
