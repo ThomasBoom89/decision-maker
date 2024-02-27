@@ -19,6 +19,6 @@ func SetUpRoutes(router fiber.Router, configurationRepository *database.Configur
 	product.SetUpRoutes()
 
 	configurationGroup := router.Group("/configuration")
-	configuration := views.NewConfiguration(configurationGroup, configurationRepository, databaseConnection)
+	configuration := views.NewConfiguration(configurationGroup, configurationRepository)
 	configuration.SetUpRoutes()
 }

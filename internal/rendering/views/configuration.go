@@ -5,20 +5,17 @@ import (
 	"github.com/ThomasBoom89/decision-maker/internal/database"
 	"github.com/ThomasBoom89/decision-maker/internal/decision"
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
 	"strconv"
 )
 
 type Configuration struct {
 	router                  fiber.Router
-	databaseConnection      *gorm.DB
 	configurationRepository *database.ConfigurationRepository
 }
 
-func NewConfiguration(router fiber.Router, configurationRepository *database.ConfigurationRepository, databaseConnection *gorm.DB) *Configuration {
+func NewConfiguration(router fiber.Router, configurationRepository *database.ConfigurationRepository) *Configuration {
 	return &Configuration{
 		router:                  router,
-		databaseConnection:      databaseConnection,
 		configurationRepository: configurationRepository,
 	}
 }
