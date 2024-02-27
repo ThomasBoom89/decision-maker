@@ -44,9 +44,11 @@ func main() {
 	}
 
 	configurationRepository := database.NewConfigurationRepository(databaseConnection)
+	productRepository := database.NewProductRepository(databaseConnection)
+	testConfigurationRepository := database.NewTestConfigurationRepository(databaseConnection)
 	// rendering frontend views
 	views := app.Group("/")
-	rendering.SetUpRoutes(views, configurationRepository, databaseConnection)
+	rendering.SetUpRoutes(views, productRepository, configurationRepository, testConfigurationRepository)
 
 	// api
 	//api := app.Group("/api")

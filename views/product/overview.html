@@ -1,4 +1,18 @@
 {{template "index" .}}
-{{range .Products}}
-<p>{{ .Name }}</p>
-{{end}}
+
+<section class="text-center flex flex-col w-full">
+    <h1>Configuration-Version: {{ .Version }}</h1>
+    <h1>Products:</h1>
+    <table class="m-auto max-w-[40%] table-auto">
+        <tr>
+            <th>Name</th>
+<!--            <th>Status</th>-->
+            <th></th>
+            <th></th>
+        </tr>
+        {{range .Products}}
+        {{template "product/overview_row" .}}
+        {{end}}
+    </table>
+    <a href="/product/new/{{ .Version}}">New</a>
+</section>

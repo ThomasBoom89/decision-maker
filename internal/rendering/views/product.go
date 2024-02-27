@@ -5,40 +5,54 @@ import (
 	"github.com/ThomasBoom89/decision-maker/internal/database"
 	"github.com/ThomasBoom89/decision-maker/internal/decision"
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
 	"strconv"
 )
 
 type Product struct {
-	router             fiber.Router
-	databaseConnection *gorm.DB
+	router                      fiber.Router
+	productRepository           *database.ProductRepository
+	configurationRepository     *database.ConfigurationRepository
+	testConfigurationRepository *database.TestConfigurationRepository
 }
 
-func NewProduct(router fiber.Router, databaseConnection *gorm.DB) *Product {
+func NewProduct(
+	router fiber.Router,
+	productRepository *database.ProductRepository,
+	configurationRepository *database.ConfigurationRepository,
+	testConfigurationRepository *database.TestConfigurationRepository,
+) *Product {
 	return &Product{
-		router:             router,
-		databaseConnection: databaseConnection,
+		router:                      router,
+		productRepository:           productRepository,
+		configurationRepository:     configurationRepository,
+		testConfigurationRepository: testConfigurationRepository,
 	}
 }
 
 func (P *Product) SetUpRoutes() {
 
+	P.router.Delete("/:id", func(ctx *fiber.Ctx) error {
+		id, _ := strconv.Atoi(ctx.Params("id"))
+
+		return P.productRepository.Delete(uint(id))
+	})
+
 	P.router.Get("/overview/:version", func(ctx *fiber.Ctx) error {
 		version, _ := strconv.Atoi(ctx.Params("version"))
-		configurationRepository := database.NewConfigurationRepository(P.databaseConnection)
-		productRepository := database.NewProductRepository(P.databaseConnection)
-		configuration, _ := configurationRepository.GetByVersion(uint(version))
-		products, _ := productRepository.GetByConfiguration(configuration.ID)
+		configuration, _ := P.configurationRepository.GetByVersion(uint(version))
+		products, _ := P.productRepository.GetByConfiguration(configuration.ID)
 
 		fmt.Println(products)
 
-		return ctx.Render("product/overview", fiber.Map{"Products": products})
+		return ctx.Render("product/overview", fiber.Map{
+			"Version":  version,
+			"Products": products,
+		})
 	})
 
 	P.router.Get("/new/:version", func(ctx *fiber.Ctx) error {
 		version, _ := strconv.Atoi(ctx.Params("version"))
-		configurationRepository := database.NewConfigurationRepository(P.databaseConnection)
-		configuration, _ := configurationRepository.GetByVersion(uint(version))
+		configuration, _ := P.configurationRepository.GetByVersion(uint(version))
 
 		return ctx.Render("product/new", fiber.Map{
 			"Parameter": configuration.Parameters,
@@ -50,8 +64,7 @@ func (P *Product) SetUpRoutes() {
 		version, _ := strconv.Atoi(ctx.FormValue("version"))
 		//name := ctx.FormValue("name")
 
-		configurationRepository := database.NewConfigurationRepository(P.databaseConnection)
-		configuration, err := configurationRepository.GetByVersion(uint(version))
+		configuration, err := P.configurationRepository.GetByVersion(uint(version))
 		if err != nil {
 			panic(err)
 
@@ -98,8 +111,7 @@ func (P *Product) SetUpRoutes() {
 Check if test configuration of new product will collide with existing product
 */
 func (P *Product) foobar(configurationId uint, parametersMap map[uint]decision.ValueTypeComparer, testConfiguration map[string]string) map[string][]Result {
-	productRepository := database.NewProductRepository(P.databaseConnection)
-	products, _ := productRepository.GetByConfiguration(configurationId)
+	products, _ := P.productRepository.GetByConfiguration(configurationId)
 	fmt.Println(testConfiguration)
 	decisionMaker := decision.NewMakerForTestConfiguration()
 
@@ -131,11 +143,9 @@ func (P *Product) foobar(configurationId uint, parametersMap map[uint]decision.V
 Check if existing test configurations will match new product
 */
 func (P *Product) foobarfoo(configuration *database.Configuration, comparerMap map[uint]decision.ValueTypeComparer) map[string][]Result {
-	productRepository := database.NewProductRepository(P.databaseConnection)
-	productIds, _ := productRepository.GetProductIdsByConfiguration(configuration.ID)
-	products, _ := productRepository.GetByConfiguration(configuration.ID)
-	testConfigurationRepository := database.NewTestConfigurationRepository(P.databaseConnection)
-	testConfigurations := testConfigurationRepository.GetByProductIds(productIds)
+	productIds, _ := P.productRepository.GetProductIdsByConfiguration(configuration.ID)
+	products, _ := P.productRepository.GetByConfiguration(configuration.ID)
+	testConfigurations := P.testConfigurationRepository.GetByProductIds(productIds)
 	decisionMaker := decision.NewMakerForTestConfiguration()
 	productsMap := make(map[uint]string)
 	for _, product := range products {
@@ -163,11 +173,9 @@ func (P *Product) foobarfoo(configuration *database.Configuration, comparerMap m
 Check if existing test configurations will match existing products
 */
 func (P *Product) barfoo(configuration *database.Configuration) {
-	productRepository := database.NewProductRepository(P.databaseConnection)
-	productIds, _ := productRepository.GetProductIdsByConfiguration(configuration.ID)
-	products, _ := productRepository.GetByConfiguration(configuration.ID)
-	testConfigurationRepository := database.NewTestConfigurationRepository(P.databaseConnection)
-	testConfigurations := testConfigurationRepository.GetByProductIds(productIds)
+	productIds, _ := P.productRepository.GetProductIdsByConfiguration(configuration.ID)
+	products, _ := P.productRepository.GetByConfiguration(configuration.ID)
+	testConfigurations := P.testConfigurationRepository.GetByProductIds(productIds)
 	decisionMaker := decision.NewMakerForTestConfiguration()
 
 	productsMap := make(map[uint]map[uint]decision.ValueTypeComparer)

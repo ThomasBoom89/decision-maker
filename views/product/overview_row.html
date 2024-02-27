@@ -1,0 +1,13 @@
+<tr id="row{{.ID}}">
+    <td>{{.Name}}</td>
+    <td>
+        <a href="/product/edit/{{.ID}}">
+            edit
+        </a>
+    </td>
+    <td>
+        <button hx-delete="/product/{{.ID}}" hx-target="#row{{.ID}}">
+            delete
+        </button>
+    </td>
+</tr>
