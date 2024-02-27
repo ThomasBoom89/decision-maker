@@ -10,14 +10,16 @@ import (
 )
 
 type Configuration struct {
-	router             fiber.Router
-	databaseConnection *gorm.DB
+	router                  fiber.Router
+	databaseConnection      *gorm.DB
+	configurationRepository *database.ConfigurationRepository
 }
 
-func NewConfiguration(router fiber.Router, databaseConnection *gorm.DB) *Configuration {
+func NewConfiguration(router fiber.Router, configurationRepository *database.ConfigurationRepository, databaseConnection *gorm.DB) *Configuration {
 	return &Configuration{
-		router:             router,
-		databaseConnection: databaseConnection,
+		router:                  router,
+		databaseConnection:      databaseConnection,
+		configurationRepository: configurationRepository,
 	}
 }
 
@@ -32,15 +34,24 @@ func (C *Configuration) SetUpRoutes() {
 		})
 	})
 
+	C.router.Get("/delete/:version", func(ctx *fiber.Ctx) error {
+		version, _ := strconv.Atoi(ctx.Params("version"))
+		err := C.configurationRepository.Delete(uint(version))
+		if err != nil {
+			return err
+		}
+
+		return ctx.Redirect("/configuration/overview")
+	})
+
 	C.router.Get("/copy/:version", func(ctx *fiber.Ctx) error {
 		version, _ := strconv.Atoi(ctx.Params("version"))
-		configurationRepository := database.NewConfigurationRepository(C.databaseConnection)
-		configuration, _ := configurationRepository.GetByVersion(uint(version))
+		configuration, _ := C.configurationRepository.GetByVersion(uint(version))
 
-		nextVersion := configurationRepository.GetNextVersion()
-		newConfiguration, _ := configurationRepository.Create(nextVersion)
+		nextVersion := C.configurationRepository.GetNextVersion()
+		newConfiguration, _ := C.configurationRepository.Create(nextVersion)
 		for _, parameter := range configuration.Parameters {
-			newConfiguration, _ = configurationRepository.AppendParameter(newConfiguration, parameter.Name, parameter.Type, string(parameter.Comparer))
+			newConfiguration, _ = C.configurationRepository.AppendParameter(newConfiguration, parameter.Name, parameter.Type, string(parameter.Comparer))
 		}
 
 		return ctx.Redirect(fmt.Sprintf("/configuration/edit/%d", newConfiguration.Version))
@@ -48,8 +59,7 @@ func (C *Configuration) SetUpRoutes() {
 
 	C.router.Get("/show/:version", func(ctx *fiber.Ctx) error {
 		version, _ := strconv.Atoi(ctx.Params("version"))
-		configurationRepository := database.NewConfigurationRepository(C.databaseConnection)
-		configuration, _ := configurationRepository.GetByVersion(uint(version))
+		configuration, _ := C.configurationRepository.GetByVersion(uint(version))
 
 		return ctx.Render("configuration/show", fiber.Map{
 			"Title":         "Show",
@@ -58,8 +68,7 @@ func (C *Configuration) SetUpRoutes() {
 	})
 
 	C.router.Get("/overview", func(ctx *fiber.Ctx) error {
-		configurationRepository := database.NewConfigurationRepository(C.databaseConnection)
-		configurations, err := configurationRepository.GetAll()
+		configurations, err := C.configurationRepository.GetAll()
 		if err != nil {
 			return err
 		}
@@ -71,8 +80,7 @@ func (C *Configuration) SetUpRoutes() {
 
 	C.router.Get("/edit/:version", func(ctx *fiber.Ctx) error {
 		version, _ := strconv.Atoi(ctx.Params("version"))
-		configurationRepository := database.NewConfigurationRepository(C.databaseConnection)
-		configuration, _ := configurationRepository.GetByVersion(uint(version))
+		configuration, _ := C.configurationRepository.GetByVersion(uint(version))
 		if configuration.Active {
 			return ctx.Redirect("/configuration/overview", 302)
 		}
@@ -87,9 +95,8 @@ func (C *Configuration) SetUpRoutes() {
 
 	C.router.Get("/status/change/:version", func(ctx *fiber.Ctx) error {
 		version, _ := strconv.Atoi(ctx.Params("version"))
-		configurationRepository := database.NewConfigurationRepository(C.databaseConnection)
-		configuration, _ := configurationRepository.GetByVersion(uint(version))
-		configuration, _ = configurationRepository.UpdateStatus(configuration)
+		configuration, _ := C.configurationRepository.GetByVersion(uint(version))
+		configuration, _ = C.configurationRepository.UpdateStatus(configuration)
 		return ctx.Render("configuration/overview_row", fiber.Map{
 			"Version": configuration.Version,
 			"Active":  configuration.Active,
@@ -108,16 +115,15 @@ func (C *Configuration) SetUpRoutes() {
 		parameterType := ctx.FormValue("type")
 		comparerType := ctx.FormValue("comparer")
 		name := ctx.FormValue("name")
-		configurationRepository := database.NewConfigurationRepository(C.databaseConnection)
 		var configuration *database.Configuration
 		if ctx.Params("version") == "" {
-			version := configurationRepository.GetNextVersion()
-			configuration, _ = configurationRepository.Create(version)
+			version := C.configurationRepository.GetNextVersion()
+			configuration, _ = C.configurationRepository.Create(version)
 		} else {
 			version, _ := strconv.Atoi(ctx.Params("version"))
-			configuration, _ = configurationRepository.GetByVersion(uint(version))
+			configuration, _ = C.configurationRepository.GetByVersion(uint(version))
 		}
-		configuration, _ = configurationRepository.AppendParameter(configuration, name, parameterType, comparerType)
+		configuration, _ = C.configurationRepository.AppendParameter(configuration, name, parameterType, comparerType)
 
 		return ctx.Render("configuration/edit_form", fiber.Map{
 			"Title":          "Edit configuration",

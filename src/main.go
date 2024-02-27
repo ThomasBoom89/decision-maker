@@ -43,9 +43,10 @@ func main() {
 		panic(err)
 	}
 
+	configurationRepository := database.NewConfigurationRepository(databaseConnection)
 	// rendering frontend views
 	views := app.Group("/")
-	rendering.SetUpRoutes(views, databaseConnection)
+	rendering.SetUpRoutes(views, configurationRepository, databaseConnection)
 
 	// api
 	//api := app.Group("/api")

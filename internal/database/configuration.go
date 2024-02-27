@@ -101,3 +101,12 @@ func (R *ConfigurationRepository) GetNextVersion() uint {
 
 	return result
 }
+
+func (R *ConfigurationRepository) Delete(version uint) error {
+	err := R.database.Debug().Model(Configuration{}).Delete(&Configuration{}, "version = ?", version).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
