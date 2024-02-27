@@ -1,4 +1,4 @@
-<tr id="row{{.Version}}">
+<tr id="row{{.ID}}">
     <td>{{.Version}}</td>
     <td>{{if .Active}} active {{else}} inactive {{end}}</td>
     <td>
@@ -24,9 +24,9 @@
         </a>
     </td>
     <td>
-        <a href="/configuration/delete/{{.Version}}">
+        <button hx-delete="/configuration/{{.ID}}" hx-target="#row{{.ID}}">
             delete
-        </a>
+        </button>
     </td>
     <td>
         <a href="/product/overview/{{.Version}}">

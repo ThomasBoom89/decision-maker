@@ -94,7 +94,7 @@ func (R *ConfigurationRepository) Create(version uint) (*Configuration, error) {
 
 func (R *ConfigurationRepository) GetNextVersion() uint {
 	var result uint
-	err := R.database.Debug().Model(Configuration{}).Select("MAX(version)+1 AS maxversion").Scan(&result).Error
+	err := R.database.Debug().Model(Configuration{}).Select("MAX(version)+1 AS maxversion").Unscoped().Scan(&result).Error
 	if err != nil {
 		panic(err)
 	}
@@ -102,8 +102,8 @@ func (R *ConfigurationRepository) GetNextVersion() uint {
 	return result
 }
 
-func (R *ConfigurationRepository) Delete(version uint) error {
-	err := R.database.Debug().Model(Configuration{}).Delete(&Configuration{}, "version = ?", version).Error
+func (R *ConfigurationRepository) Delete(id uint) error {
+	err := R.database.Debug().Delete(&Configuration{}, id).Error
 	if err != nil {
 		return err
 	}

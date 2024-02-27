@@ -31,14 +31,14 @@ func (C *Configuration) SetUpRoutes() {
 		})
 	})
 
-	C.router.Get("/delete/:version", func(ctx *fiber.Ctx) error {
-		version, _ := strconv.Atoi(ctx.Params("version"))
-		err := C.configurationRepository.Delete(uint(version))
+	C.router.Delete("/:id", func(ctx *fiber.Ctx) error {
+		id, _ := strconv.Atoi(ctx.Params("id"))
+		err := C.configurationRepository.Delete(uint(id))
 		if err != nil {
 			return err
 		}
 
-		return ctx.Redirect("/configuration/overview")
+		return nil
 	})
 
 	C.router.Get("/copy/:version", func(ctx *fiber.Ctx) error {
