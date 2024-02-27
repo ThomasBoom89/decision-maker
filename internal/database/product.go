@@ -68,3 +68,13 @@ func (P *ProductRepository) GetProductIdsByConfiguration(configurationId uint) (
 
 	return fooSlice, nil
 }
+
+func (P *ProductRepository) Delete(id uint) error {
+	err := P.database.Debug().Delete(&Product{}, id).Error
+	if err != nil {
+		panic(err)
+		return err
+	}
+
+	return nil
+}
