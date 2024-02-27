@@ -23,7 +23,7 @@ func NewProductRepository(database *gorm.DB) *ProductRepository {
 
 func (P *ProductRepository) GetByConfiguration(configurationId uint) ([]Product, error) {
 	var product []Product
-	err := P.database.Model(Product{}).Where("configuration_id = ?", configurationId).Preload("ParameterValues").Find(&product).Error
+	err := P.database.Debug().Model(Product{}).Where("configuration_id = ?", configurationId).Preload("TestConfiguration").Preload("ParameterValues").Find(&product).Error
 	if err != nil {
 		return nil, err
 	}
@@ -77,4 +77,15 @@ func (P *ProductRepository) Delete(id uint) error {
 	}
 
 	return nil
+}
+
+func (P *ProductRepository) GetOne(id uint) (Product, error) {
+	var product Product
+	err := P.database.Debug().Preload("ParameterValues").Find(&product, id).Error
+	if err != nil {
+		panic(err)
+		return Product{}, err
+	}
+
+	return product, nil
 }

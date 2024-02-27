@@ -10,7 +10,7 @@
         {{ range $key, $value := .TestConfigurationOldProducts }}
         <p>{{ $key }}</p>
         {{range $key1, $value1 := $value}}
-        <p>{{.ParameterName}}</p>
+        <p>{{.ParameterName}}-{{.TestValue}}-{{.ProductValue}}-{{.CompareType}}-{{.Comparer}}-{{.Result}}</p>
         {{ end }}
         {{ end }}
     </section>
@@ -19,8 +19,11 @@
         {{ range $key, $value := .OldTestConfigurationNewProduct }}
         <p>{{ $key }}</p>
         {{range $key1, $value1 := $value}}
-        <p>{{.ParameterName}}</p>
+        <p>{{.ParameterName}}-{{.TestValue}}-{{.ProductValue}}-{{.CompareType}}-{{.Comparer}}-{{.Result}}</p>
         {{ end }}
         {{ end }}
+    </section>
+    <section>
+        Insert: {{ .Insert }}
     </section>
 </div>

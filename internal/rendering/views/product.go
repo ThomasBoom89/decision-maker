@@ -85,13 +85,16 @@ func (P *Product) SetUpRoutes() {
 
 	P.router.Post("/save", func(ctx *fiber.Ctx) error {
 		version, _ := strconv.Atoi(ctx.FormValue("version"))
-		//name := ctx.FormValue("name")
+		name := ctx.FormValue("name")
 
 		configuration, err := P.configurationRepository.GetByVersion(uint(version))
 		if err != nil {
 			panic(err)
 
 		}
+		products, err := P.productRepository.GetByConfiguration(configuration.ID)
+
+		//
 		parameterMap := make(map[uint]string)
 		//var values []decision.ValueTypeComparer
 		values := make(map[uint]decision.ValueTypeComparer)
@@ -105,27 +108,31 @@ func (P *Product) SetUpRoutes() {
 				Type:     parameter.Type,
 				Comparer: decision.Compare(parameter.Comparer),
 			}
-			//values = append(values, valueTypeComparer)
 		}
 
 		testConfigurator := decision.NewTestConfigurator()
 		testConfiguration := testConfigurator.Create(values)
 
 		//decisionMaker := decision.NewMakerForTestConfiguration()
-		testConfigurationOldProducts := P.foobar(configuration.ID, values, testConfiguration)
+		testConfigurationOldProducts := P.foobar(products, values, testConfiguration)
 		//barfoo(databaseConnection, configuration)
-		oldTestConfigurationNewProduct := P.foobarfoo(configuration, values)
+		oldTestConfigurationNewProduct := P.foobarfoo(products, values)
 		// todo: test configuration logic
 		//fmt.Println("testcnfig:", testConfiguration)
 		//fmt.Println("parammap: ", parameterMap)
 		//fmt.Println("values:", values)
 		//productRepository := database.NewProductRepository(databaseConnection)
-		//productRepository.InsertOne(configuration.ID, name, parameterMap, testConfiguration)
+		insert := len(testConfigurationOldProducts) == 0 && len(oldTestConfigurationNewProduct) == 0
+		if insert {
+			P.productRepository.InsertOne(configuration.ID, name, parameterMap, testConfiguration)
+		}
+		fmt.Println(name)
 
 		return ctx.Render("product/diff", fiber.Map{
 			"TestConfiguration":              testConfiguration,
 			"TestConfigurationOldProducts":   testConfigurationOldProducts,
 			"OldTestConfigurationNewProduct": oldTestConfigurationNewProduct,
+			"Insert":                         insert,
 		})
 	})
 }
@@ -133,8 +140,7 @@ func (P *Product) SetUpRoutes() {
 /*
 Check if test configuration of new product will collide with existing product
 */
-func (P *Product) foobar(configurationId uint, parametersMap map[uint]decision.ValueTypeComparer, testConfiguration map[string]string) map[string][]Result {
-	products, _ := P.productRepository.GetByConfiguration(configurationId)
+func (P *Product) foobar(products []database.Product, parametersMap map[uint]decision.ValueTypeComparer, testConfiguration map[string]string) map[string][]Result {
 	fmt.Println(testConfiguration)
 	decisionMaker := decision.NewMakerForTestConfiguration()
 
@@ -147,11 +153,15 @@ func (P *Product) foobar(configurationId uint, parametersMap map[uint]decision.V
 		for _, parameterValue := range product.ParameterValues {
 			compareType := parametersMap[parameterValue.ParameterID]
 			decisionResult := decisionMaker.Decide(parameterValue.Value, testConfiguration[compareType.Name], compareType.Comparer, parametersMap[parameterValue.ParameterID].Type)
+			if decisionResult == false {
+				continue
+			}
 			result[product.Name] = append(result[product.Name], Result{
 				ParameterName: compareType.Name,
 				TestValue:     testConfiguration[compareType.Name],
 				ProductValue:  parameterValue.Value,
 				CompareType:   compareType.Type,
+				Comparer:      compareType.Comparer,
 				Result:        decisionResult,
 			})
 			// todo: find unique match and return
@@ -165,25 +175,26 @@ func (P *Product) foobar(configurationId uint, parametersMap map[uint]decision.V
 *
 Check if existing test configurations will match new product
 */
-func (P *Product) foobarfoo(configuration *database.Configuration, comparerMap map[uint]decision.ValueTypeComparer) map[string][]Result {
-	productIds, _ := P.productRepository.GetProductIdsByConfiguration(configuration.ID)
-	products, _ := P.productRepository.GetByConfiguration(configuration.ID)
-	testConfigurations := P.testConfigurationRepository.GetByProductIds(productIds)
+func (P *Product) foobarfoo(products []database.Product, comparerMap map[uint]decision.ValueTypeComparer) map[string][]Result {
 	decisionMaker := decision.NewMakerForTestConfiguration()
 	productsMap := make(map[uint]string)
 	for _, product := range products {
 		productsMap[product.ID] = product.Name
 	}
 	result := make(map[string][]Result)
-	for _, testConfiguration := range testConfigurations {
-		for _, parameter := range configuration.Parameters {
-			comparer := comparerMap[parameter.ID]
-			decisionResult := decisionMaker.Decide(comparer.Value, testConfiguration.Configuration[comparer.Name], comparer.Comparer, comparer.Type)
-			result[productsMap[testConfiguration.ProductID]] = append(result[productsMap[testConfiguration.ProductID]], Result{
+	for _, product := range products {
+		for key, parameter := range comparerMap {
+			comparer := comparerMap[key]
+			decisionResult := decisionMaker.Decide(comparer.Value, product.TestConfiguration.Configuration[comparer.Name], comparer.Comparer, comparer.Type)
+			if decisionResult == false {
+				continue
+			}
+			result[productsMap[product.TestConfiguration.ProductID]] = append(result[productsMap[product.TestConfiguration.ProductID]], Result{
 				ParameterName: parameter.Name,
-				TestValue:     testConfiguration.Configuration[comparer.Name],
+				TestValue:     product.TestConfiguration.Configuration[comparer.Name],
 				ProductValue:  comparer.Value,
 				CompareType:   comparer.Type,
+				Comparer:      comparer.Comparer,
 				Result:        decisionResult,
 			})
 		}
@@ -244,5 +255,6 @@ type Result struct {
 	TestValue     string
 	ProductValue  string
 	CompareType   string
+	Comparer      decision.Compare
 	Result        bool
 }
