@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/ThomasBoom89/decision-maker/internal/api"
 	"github.com/ThomasBoom89/decision-maker/internal/configuration"
 	"github.com/ThomasBoom89/decision-maker/internal/database"
 	"github.com/ThomasBoom89/decision-maker/internal/rendering"
@@ -51,6 +52,8 @@ func main() {
 	rendering.SetUpRoutes(views, productRepository, configurationRepository, testConfigurationRepository)
 
 	// api
-	//api := app.Group("/api")
+	apiGroup := app.Group("/api")
+	apid := api.NewApi(apiGroup, configurationRepository, productRepository)
+	apid.SetUpRoutes()
 	log.Fatal(app.Listen(":3000"))
 }
