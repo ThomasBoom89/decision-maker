@@ -37,6 +37,21 @@ func (R *ConfigurationRepository) GetByVersion(version uint) (*Configuration, er
 	return &configuration, nil
 }
 
+func (R *ConfigurationRepository) GetById(id uint) (*Configuration, error) {
+	var configuration Configuration
+	result := R.database.Debug().Model(Configuration{}).Preload("Parameters").First(&configuration, id)
+	err := result.Error
+	if err != nil {
+		return nil, err
+	}
+
+	if result.RowsAffected == 0 {
+		return nil, nil
+	}
+
+	return &configuration, nil
+}
+
 func (R *ConfigurationRepository) GetAll() ([]Configuration, error) {
 	var configurations []Configuration
 	err := R.database.Debug().Model(Configuration{}).Order("version DESC").Find(&configurations).Error
@@ -93,13 +108,17 @@ func (R *ConfigurationRepository) Create(version uint) (*Configuration, error) {
 }
 
 func (R *ConfigurationRepository) GetNextVersion() uint {
-	var result uint
-	err := R.database.Debug().Model(Configuration{}).Select("MAX(version)+1 AS maxversion").Unscoped().Scan(&result).Error
+	result := R.database.Debug().Model(Configuration{}).Select("MAX(version)+1 AS maxversion").Unscoped()
+	if result.RowsAffected <= 0 {
+		return 1
+	}
+	var newVersion uint
+	err := result.Scan(&newVersion).Error
 	if err != nil {
 		panic(err)
 	}
 
-	return result
+	return newVersion
 }
 
 func (R *ConfigurationRepository) Delete(id uint) error {
