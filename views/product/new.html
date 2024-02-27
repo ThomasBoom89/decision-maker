@@ -1,11 +1,15 @@
 {{template "index" .}}
 
 <form hx-post="/product/save" hx-target="#output" class="flex flex-col max-w-[20%] m-auto">
-    <label for="name">Name: </label><input type="text" name="name" id="name" placeholder="insert name...">
-    <label for="version">Version: </label><input type="text" name="version" id="version" value="{{.Version}}">
+    <label for="name">Name: </label>
+    <input type="text" name="name" id="name" placeholder="insert name..." value="{{.Name}}" required>
+    <label for="version">Version: </label>
+    <input type="text" name="version" id="version" value="{{.Version}}">
     {{range .Parameter}}
     <label for="parameter{{.ID}}">{{ .Name }}-{{ .Type }}-{{ .Comparer }}</label>
-    <input type="text" name="parameter{{.ID}}" id="parameter{{.ID}}">
+    <input type="text" name="parameter{{.ID}}" id="parameter{{.ID}}" required
+           value="{{ if .ParameterValues }} {{(index .ParameterValues 0).Value }} {{ end }}"
+    >
     {{end}}
 
     <input type="submit" value="save">

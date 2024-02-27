@@ -50,6 +50,29 @@ func (P *Product) SetUpRoutes() {
 		})
 	})
 
+	P.router.Get("/edit/:id", func(ctx *fiber.Ctx) error {
+		id, _ := strconv.Atoi(ctx.Params("id"))
+		product, _ := P.productRepository.GetOne(uint(id))
+		configuration, _ := P.configurationRepository.GetById(product.ConfigurationID)
+		parameterValues := make(map[uint]database.ParameterValue)
+		for _, parameterValue := range product.ParameterValues {
+			parameterValues[parameterValue.ParameterID] = parameterValue
+		}
+		parameters := configuration.Parameters
+		for key, parameter := range parameters {
+			if value, ok := parameterValues[parameter.ID]; ok {
+				parameters[key].ParameterValues = []database.ParameterValue{value}
+
+			}
+		}
+
+		return ctx.Render("product/new", fiber.Map{
+			"Parameter": parameters,
+			"Version":   configuration.Version,
+			"Name":      product.Name,
+		})
+	})
+
 	P.router.Get("/new/:version", func(ctx *fiber.Ctx) error {
 		version, _ := strconv.Atoi(ctx.Params("version"))
 		configuration, _ := P.configurationRepository.GetByVersion(uint(version))
