@@ -4,6 +4,7 @@ import (
 	"github.com/ThomasBoom89/decision-maker/internal/api"
 	"github.com/ThomasBoom89/decision-maker/internal/configuration"
 	"github.com/ThomasBoom89/decision-maker/internal/database"
+	"github.com/ThomasBoom89/decision-maker/internal/decision"
 	"github.com/ThomasBoom89/decision-maker/internal/rendering"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
@@ -51,9 +52,11 @@ func main() {
 	views := app.Group("/")
 	rendering.SetUpRoutes(views, productRepository, configurationRepository, testConfigurationRepository)
 
+	decisionMaker := decision.NewMaker()
+
 	// api
 	apiGroup := app.Group("/api")
-	apid := api.NewApi(apiGroup, configurationRepository, productRepository)
+	apid := api.NewApi(apiGroup, configurationRepository, productRepository, decisionMaker)
 	apid.SetUpRoutes()
 	log.Fatal(app.Listen(":3000"))
 }

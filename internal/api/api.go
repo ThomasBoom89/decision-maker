@@ -12,17 +12,20 @@ type Api struct {
 	router                  fiber.Router
 	configurationRepository *database.ConfigurationRepository
 	productRepository       *database.ProductRepository
+	decisionMaker           *decision.Maker
 }
 
 func NewApi(
 	router fiber.Router,
 	configurationRepository *database.ConfigurationRepository,
 	productRepository *database.ProductRepository,
+	decisionMaker *decision.Maker,
 ) *Api {
 	return &Api{
 		router:                  router,
 		configurationRepository: configurationRepository,
 		productRepository:       productRepository,
+		decisionMaker:           decisionMaker,
 	}
 }
 
@@ -56,7 +59,25 @@ func (A *Api) SetUpRoutes() {
 			return err
 		}
 
-		// todo: match GET Params agains all products
-		return ctx.JSON(products)
+		for _, product := range products {
+			result := A.checkProductValues(product, queryParameters)
+			if result == true {
+				return ctx.JSON(product)
+			}
+		}
+
+		return ctx.JSON(fiber.Map{})
 	})
+}
+
+func (A *Api) checkProductValues(product database.Product, queryParameters map[uint]decision.ValueTypeComparer) bool {
+	for _, parameterValue := range product.ParameterValues {
+		queryParameter := queryParameters[parameterValue.ParameterID]
+		result := A.decisionMaker.Decide(parameterValue.Value, queryParameter.Value, queryParameter.Comparer, queryParameter.Type)
+		if result == false {
+			return false
+		}
+	}
+
+	return true
 }
