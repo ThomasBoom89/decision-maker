@@ -73,19 +73,16 @@ func (R *ConfigurationRepository) UpdateStatus(configuration *Configuration) (*C
 }
 
 func (R *ConfigurationRepository) AppendParameter(configuration *Configuration, name, parameterType, comparerType string) (*Configuration, error) {
-	var dummyConfiguration Configuration
 	parameter := Parameter{
 		Name:     name,
 		Type:     parameterType,
 		Comparer: decision.Compare(comparerType),
 	}
-	dummyConfiguration.ID = configuration.ID
-	err := R.database.Debug().Model(&dummyConfiguration).Association("Parameters").Append(&parameter)
+	err := R.database.Debug().Model(configuration).Association("Parameters").Append(&parameter)
 	if err != nil {
 		panic(err)
 		return nil, err
 	}
-	configuration.Parameters = append(configuration.Parameters, parameter)
 
 	return configuration, nil
 }
@@ -109,7 +106,8 @@ func (R *ConfigurationRepository) Create(version uint) (*Configuration, error) {
 
 func (R *ConfigurationRepository) GetNextVersion() uint {
 	result := R.database.Debug().Model(Configuration{}).Select("MAX(version)+1 AS maxversion").Unscoped()
-	if result.RowsAffected <= 0 {
+
+	if result.Error != nil {
 		return 1
 	}
 	var newVersion uint

@@ -22,13 +22,34 @@ func NewProductRepository(database *gorm.DB) *ProductRepository {
 }
 
 func (P *ProductRepository) GetByConfiguration(configurationId uint) ([]Product, error) {
-	var product []Product
-	err := P.database.Debug().Model(Product{}).Where("configuration_id = ?", configurationId).Preload("TestConfiguration").Preload("ParameterValues").Find(&product).Error
+	var products []Product
+	err := P.database.Debug().Model(Product{}).
+		Where("configuration_id = ?", configurationId).
+		Preload("TestConfiguration").
+		Preload("ParameterValues").
+		Find(&products).Error
+
 	if err != nil {
 		return nil, err
 	}
 
-	return product, nil
+	return products, nil
+}
+
+func (P *ProductRepository) GetByConfigurationExceptProduct(configurationId uint, productId uint) ([]Product, error) {
+	var products []Product
+	err := P.database.Debug().Model(Product{}).
+		Where("configuration_id = ?", configurationId).
+		Where("id != ?", productId).
+		Preload("TestConfiguration").
+		Preload("ParameterValues").
+		Find(&products).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return products, nil
 }
 
 func (P *ProductRepository) InsertOne(configurationId uint, name string, parameterValuesMap map[uint]string, testConfigurationMap map[string]string) {
@@ -52,6 +73,16 @@ func (P *ProductRepository) InsertOne(configurationId uint, name string, paramet
 	}
 
 	P.database.Create(&product)
+}
+
+func (P *ProductRepository) Update(product Product) error {
+	err := P.database.Debug().Model(&product).Session(&gorm.Session{FullSaveAssociations: true}).Updates(&product).Error
+	if err != nil {
+		panic(err)
+		return err
+	}
+
+	return nil
 }
 
 func (P *ProductRepository) GetProductIdsByConfiguration(configurationId uint) ([]uint, error) {
@@ -81,7 +112,10 @@ func (P *ProductRepository) Delete(id uint) error {
 
 func (P *ProductRepository) GetOne(id uint) (Product, error) {
 	var product Product
-	err := P.database.Debug().Preload("ParameterValues").Find(&product, id).Error
+	err := P.database.Debug().
+		Preload("ParameterValues").
+		Preload("TestConfiguration").
+		Find(&product, id).Error
 	if err != nil {
 		panic(err)
 		return Product{}, err

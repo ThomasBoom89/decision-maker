@@ -6,6 +6,7 @@ import (
 	"github.com/ThomasBoom89/decision-maker/internal/decision"
 	"github.com/gofiber/fiber/v2"
 	"strconv"
+	"time"
 )
 
 type Product struct {
@@ -42,8 +43,6 @@ func (P *Product) SetUpRoutes() {
 		configuration, _ := P.configurationRepository.GetByVersion(uint(version))
 		products, _ := P.productRepository.GetByConfiguration(configuration.ID)
 
-		fmt.Println(products)
-
 		return ctx.Render("product/overview", fiber.Map{
 			"Version":  version,
 			"Products": products,
@@ -61,6 +60,13 @@ func (P *Product) SetUpRoutes() {
 		parameters := configuration.Parameters
 		for key, parameter := range parameters {
 			if value, ok := parameterValues[parameter.ID]; ok {
+				if parameter.Type == decision.DateTime {
+					timestamp, err := strconv.Atoi(value.Value)
+					if err != nil {
+						panic(err)
+					}
+					value.Value = time.Unix(int64(timestamp), 0).Format("2006-01-02T15:04")
+				}
 				parameters[key].ParameterValues = []database.ParameterValue{value}
 
 			}
@@ -70,6 +76,7 @@ func (P *Product) SetUpRoutes() {
 			"Parameter": parameters,
 			"Version":   configuration.Version,
 			"Name":      product.Name,
+			"ID":        product.ID,
 		})
 	})
 
@@ -83,50 +90,61 @@ func (P *Product) SetUpRoutes() {
 		})
 	})
 
-	P.router.Post("/save", func(ctx *fiber.Ctx) error {
+	P.router.Post("/save/:id?", func(ctx *fiber.Ctx) error {
 		version, _ := strconv.Atoi(ctx.FormValue("version"))
+		id, _ := strconv.Atoi(ctx.Params("id", "0"))
 		name := ctx.FormValue("name")
-
 		configuration, err := P.configurationRepository.GetByVersion(uint(version))
 		if err != nil {
 			panic(err)
 
 		}
-		products, err := P.productRepository.GetByConfiguration(configuration.ID)
-
-		//
+		var products []database.Product
+		if id > 0 {
+			products, err = P.productRepository.GetByConfigurationExceptProduct(configuration.ID, uint(id))
+		} else {
+			products, err = P.productRepository.GetByConfiguration(configuration.ID)
+		}
 		parameterMap := make(map[uint]string)
-		//var values []decision.ValueTypeComparer
 		values := make(map[uint]decision.ValueTypeComparer)
 		for _, parameter := range configuration.Parameters {
 			parameterId := strconv.Itoa(int(parameter.ID))
 			parameterValue := ctx.FormValue("parameter" + parameterId)
+			if parameter.Type == decision.DateTime {
+				fmt.Println(parameterValue)
+				dateTime, err := time.Parse("2006-01-02T15:04", parameterValue)
+				if err != nil {
+					panic(err)
+				}
+				parameterValue = strconv.Itoa(int(dateTime.Unix()))
+			}
 			parameterMap[parameter.ID] = parameterValue
 			values[parameter.ID] = decision.ValueTypeComparer{
 				Name:     parameter.Name,
 				Value:    parameterValue,
 				Type:     parameter.Type,
-				Comparer: decision.Compare(parameter.Comparer),
+				Comparer: parameter.Comparer,
 			}
 		}
 
 		testConfigurator := decision.NewTestConfigurator()
 		testConfiguration := testConfigurator.Create(values)
-
-		//decisionMaker := decision.NewMakerForTestConfiguration()
 		testConfigurationOldProducts := P.foobar(products, values, testConfiguration)
-		//barfoo(databaseConnection, configuration)
 		oldTestConfigurationNewProduct := P.foobarfoo(products, values)
-		// todo: test configuration logic
-		//fmt.Println("testcnfig:", testConfiguration)
-		//fmt.Println("parammap: ", parameterMap)
-		//fmt.Println("values:", values)
-		//productRepository := database.NewProductRepository(databaseConnection)
+
 		insert := len(testConfigurationOldProducts) == 0 && len(oldTestConfigurationNewProduct) == 0
 		if insert {
-			P.productRepository.InsertOne(configuration.ID, name, parameterMap, testConfiguration)
+			if id > 0 {
+				product, _ := P.productRepository.GetOne(uint(id))
+				product.TestConfiguration.Configuration = testConfiguration
+				for key, parameterValue := range product.ParameterValues {
+					product.ParameterValues[key].Value = values[parameterValue.ParameterID].Value
+				}
+				_ = P.productRepository.Update(product)
+			} else {
+				P.productRepository.InsertOne(configuration.ID, name, parameterMap, testConfiguration)
+			}
 		}
-		fmt.Println(name)
 
 		return ctx.Render("product/diff", fiber.Map{
 			"TestConfiguration":              testConfiguration,
@@ -141,7 +159,6 @@ func (P *Product) SetUpRoutes() {
 Check if test configuration of new product will collide with existing product
 */
 func (P *Product) foobar(products []database.Product, parametersMap map[uint]decision.ValueTypeComparer, testConfiguration map[string]string) map[string][]Result {
-	fmt.Println(testConfiguration)
 	decisionMaker := decision.NewMakerForTestConfiguration()
 
 	result := make(map[string][]Result)
@@ -149,7 +166,6 @@ func (P *Product) foobar(products []database.Product, parametersMap map[uint]dec
 		if len(product.ParameterValues) == 0 {
 			continue
 		}
-		fmt.Println(product.ParameterValues[0].Value)
 		for _, parameterValue := range product.ParameterValues {
 			compareType := parametersMap[parameterValue.ParameterID]
 			decisionResult := decisionMaker.Decide(parameterValue.Value, testConfiguration[compareType.Name], compareType.Comparer, parametersMap[parameterValue.ParameterID].Type)

@@ -41,8 +41,9 @@ func (M *Maker) Decide(schmalue string, value string, compare Compare, parameter
 		compare2 := M.stringCaster.toFloat(value)
 		return M.comparer.CompareFloat(compare1, compare2, compare)
 	case DateTime:
-		// todo: cast datetime
-		return false
+		compare1 := M.stringCaster.toInt(schmalue)
+		compare2 := M.stringCaster.toInt(value)
+		return M.comparer.CompareInt(compare1, compare2, compare)
 	case String:
 		return M.comparer.CompareString(schmalue, value, compare)
 	case Boolean:
