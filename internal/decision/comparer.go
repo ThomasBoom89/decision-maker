@@ -9,6 +9,7 @@ const (
 	LowerEqual   Compare = "le"
 	Equal        Compare = "eq"
 	NotEqual     Compare = "ne"
+	Range        Compare = "range"
 )
 
 const (
@@ -121,7 +122,7 @@ func (D *TestConfigurationEqualCompare[T]) CompareEqual(schmalue T, value T, com
 }
 
 func GetCompareTypes() map[string][]Compare {
-	fullCompare := []Compare{GreaterThan, GreaterEqual, LowerThan, LowerEqual, Equal, NotEqual}
+	fullCompare := []Compare{GreaterThan, GreaterEqual, LowerThan, LowerEqual, Equal, NotEqual, Range}
 	equalCompare := []Compare{Equal, NotEqual}
 
 	return map[string][]Compare{

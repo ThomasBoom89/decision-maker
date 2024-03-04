@@ -132,7 +132,7 @@ func (C *Configuration) SetUpRoutes() {
 }
 
 func (C *Configuration) getCompareTypes() []string {
-	return []string{"gt", "ge", "lt", "le", "eq", "ne"}
+	return []string{"gt", "ge", "lt", "le", "eq", "ne", "range"}
 }
 
 func (C *Configuration) getParameterTypes() []string {
