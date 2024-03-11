@@ -1,4 +1,4 @@
-FROM golang:1.21-alpine3.19 AS Builder
+FROM golang:1.22-alpine3.19 AS Builder
 
 WORKDIR /app
 COPY . .
@@ -26,9 +26,10 @@ EXPOSE 3000
 
 CMD ["./decision-maker"]
 
-FROM golang:1.21-alpine3.19 AS Development
+FROM golang:1.22-alpine3.19 AS Development
 
-RUN go install github.com/cosmtrek/air@latest
+RUN go install github.com/cosmtrek/air@v1.51.0
+RUN go install github.com/go-delve/delve/cmd/dlv@v1.22.1
 
 WORKDIR /app
 

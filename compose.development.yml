@@ -15,6 +15,7 @@ services:
       target: Development
     ports:
       - "3002:3000"
+      - "2345:2345"
     volumes:
       - ./internal:/app/internal
       - ./public:/app/public
