@@ -1,6 +1,12 @@
 package decision
 
-import "strings"
+import (
+	"strings"
+)
+
+const (
+	RangeSeparator = "$%@"
+)
 
 type Maker struct {
 	stringCaster *StringCaster
@@ -33,12 +39,14 @@ func NewMakerForTestConfiguration() *Maker {
 
 func (M *Maker) Decide(schmalue string, value string, compare Compare, parameterType string) bool {
 	if compare == Range {
-		// 50$%@100
-		vals := strings.Split(value, "$%@")
-		schmals := strings.Split(schmalue, "$%@")
-		result1 := M.Decide(schmals[0], vals[0], GreaterEqual, parameterType)
-		result2 := M.Decide(schmals[1], vals[1], LowerEqual, parameterType)
-		return result1 == true && result2 == true
+		vals := strings.Split(value, RangeSeparator)
+		schmals := strings.Split(schmalue, RangeSeparator)
+		result1 := M.Decide(schmals[0], vals[0], LowerEqual, parameterType)
+		result2 := M.Decide(schmals[0], vals[1], GreaterEqual, parameterType)
+		result3 := M.Decide(schmals[1], vals[0], LowerEqual, parameterType)
+		result4 := M.Decide(schmals[1], vals[1], GreaterEqual, parameterType)
+
+		return (result1 == true && result2 == true) || (result3 == true && result4 == true)
 	} else {
 		switch parameterType {
 		case Integer:
