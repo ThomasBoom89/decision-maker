@@ -111,12 +111,14 @@ func (P *Product) SetUpRoutes() {
 			parameterId := strconv.Itoa(int(parameter.ID))
 			parameterValue := ctx.FormValue("parameter" + parameterId)
 			if parameter.Type == decision.DateTime {
-				fmt.Println(parameterValue)
-				dateTime, err := time.Parse("2006-01-02T15:04", parameterValue)
-				if err != nil {
-					panic(err)
+				parameterValue = P.getParsedUnixTime(parameterValue)
+			}
+			if parameter.Comparer == decision.Range {
+				if parameter.Type == decision.DateTime {
+					parameterValue += decision.RangeSeparator + P.getParsedUnixTime(ctx.FormValue("range"+parameterId))
+				} else {
+					parameterValue += decision.RangeSeparator + ctx.FormValue("range"+parameterId)
 				}
-				parameterValue = strconv.Itoa(int(dateTime.Unix()))
 			}
 			parameterMap[parameter.ID] = parameterValue
 			values[parameter.ID] = decision.ValueTypeComparer{
@@ -155,6 +157,15 @@ func (P *Product) SetUpRoutes() {
 	})
 }
 
+func (P *Product) getParsedUnixTime(parameterValue string) string {
+	dateTime, err := time.Parse("2006-01-02T15:04", parameterValue)
+	if err != nil {
+		panic(err)
+	}
+
+	return strconv.Itoa(int(dateTime.Unix()))
+}
+
 /*
 Check if test configuration of new product will collide with existing product
 */
@@ -181,6 +192,9 @@ func (P *Product) foobar(products []database.Product, parametersMap map[uint]dec
 				Result:        decisionResult,
 			})
 			// todo: find unique match and return
+		}
+		if len(product.ParameterValues) != len(result[product.Name]) {
+			delete(result, product.Name)
 		}
 	}
 
@@ -213,6 +227,9 @@ func (P *Product) foobarfoo(products []database.Product, comparerMap map[uint]de
 				Comparer:      comparer.Comparer,
 				Result:        decisionResult,
 			})
+		}
+		if len(comparerMap) != len(result[productsMap[product.TestConfiguration.ProductID]]) {
+			delete(result, productsMap[product.TestConfiguration.ProductID])
 		}
 	}
 
