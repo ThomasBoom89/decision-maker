@@ -54,7 +54,7 @@ func (T *TestConfigurator) getForBool(value string, comparer Compare) string {
 
 func (T *TestConfigurator) getForInteger(value string, comparer Compare) string {
 	switch comparer {
-	case Equal, NotEqual:
+	case Equal, NotEqual, Range:
 		return value
 	case GreaterThan, GreaterEqual:
 		result := int64(math.MaxInt64)
@@ -63,7 +63,7 @@ func (T *TestConfigurator) getForInteger(value string, comparer Compare) string 
 		result := int64(math.MinInt64)
 		return T.stringCaster.fromInt(result)
 	default:
-		panic("darf nicht passieren")
+		panic("darf nicht passieren integer")
 	}
 }
 
@@ -72,13 +72,13 @@ func (T *TestConfigurator) getForString(value string, comparer Compare) string {
 	case Equal, NotEqual:
 		return value
 	default:
-		panic("darf nicht passieren")
+		panic("darf nicht passieren string")
 	}
 }
 
 func (T *TestConfigurator) getForFloat(value string, comparer Compare) string {
 	switch comparer {
-	case Equal, NotEqual:
+	case Equal, NotEqual, Range:
 		return value
 	case GreaterThan, GreaterEqual:
 		next := math.MaxFloat64
@@ -87,6 +87,6 @@ func (T *TestConfigurator) getForFloat(value string, comparer Compare) string {
 		next := math.MaxFloat64 * -1
 		return T.stringCaster.fromFloat(next)
 	default:
-		panic("darf nicht passieren")
+		panic("darf nicht passieren float")
 	}
 }
