@@ -18,6 +18,8 @@ const (
 	DateTime = "datetime"
 	String   = "string"
 	Boolean  = "bool"
+	Date     = "date"
+	Time     = "time"
 )
 
 type Comparer struct {
@@ -131,5 +133,7 @@ func GetCompareTypes() map[string][]Compare {
 		DateTime: fullCompare,
 		String:   equalCompare,
 		Boolean:  equalCompare,
+		Time:     fullCompare,
+		Date:     fullCompare,
 	}
 }

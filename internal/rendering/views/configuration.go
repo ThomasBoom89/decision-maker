@@ -136,5 +136,5 @@ func (C *Configuration) getCompareTypes() []string {
 }
 
 func (C *Configuration) getParameterTypes() []string {
-	return []string{"int", "string", "float", "datetime", "bool"}
+	return []string{"int", "string", "float", "datetime", "bool", "time", "date"}
 }

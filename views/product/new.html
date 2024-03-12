@@ -11,6 +11,14 @@
         {{ if eq .Type "datetime" }}
         <input class="w-full" type="datetime-local" name="parameter{{.ID}}" id="parameter{{.ID}}" required
                value="{{ if .ParameterValues }}{{(index .ParameterValues 0).Value }}{{ end }}">
+        {{ else if eq .Type "time" }}
+        <input class="ml-2 w-full" type="time" name="parameter{{.ID}}" id="parameter{{.ID}}" required
+               value="{{ if .ParameterValues }}{{(index .ParameterValues 0).Value }}{{ end }}"
+        >
+        {{ else if eq .Type "date" }}
+        <input class="ml-2 w-full" type="date" name="parameter{{.ID}}" id="parameter{{.ID}}" required
+               value="{{ if .ParameterValues }}{{(index .ParameterValues 0).Value }}{{ end }}"
+        >
         {{ else }}
         <input class="w-full" type="text" name="parameter{{.ID}}" id="parameter{{.ID}}" required
                value="{{ if .ParameterValues }}{{(index .ParameterValues 0).Value }}{{ end }}"
@@ -18,14 +26,22 @@
         {{end}}
 
         {{ if eq .Comparer "range" }}
-            {{ if eq .Type "datetime" }}
-            <input class="ml-2 w-full" type="datetime-local" name="range{{.ID}}" id="range{{.ID}}" required
-                   value="{{ if .ParameterValues }}{{(index .ParameterValues 1).Value }}{{ end }}">
-            {{ else }}
-            <input class="ml-2 w-full" type="text" name="range{{.ID}}" id="range{{.ID}}" required
-                   value="{{ if .ParameterValues }}{{(index .ParameterValues 1).Value }}{{ end }}"
-            >
-            {{end}}
+        {{ if eq .Type "datetime" }}
+        <input class="ml-2 w-full" type="datetime-local" name="range{{.ID}}" id="range{{.ID}}" required
+               value="{{ if .ParameterValues }}{{(index .ParameterValues 1).Value }}{{ end }}">
+        {{ else if eq .Type "time" }}
+        <input class="ml-2 w-full" type="time" name="range{{.ID}}" id="range{{.ID}}" required
+               value="{{ if .ParameterValues }}{{(index .ParameterValues 1).Value }}{{ end }}"
+        >
+        {{ else if eq .Type "date" }}
+        <input class="ml-2 w-full" type="date" name="range{{.ID}}" id="range{{.ID}}" required
+               value="{{ if .ParameterValues }}{{(index .ParameterValues 1).Value }}{{ end }}"
+        >
+        {{ else }}
+        <input class="ml-2 w-full" type="text" name="range{{.ID}}" id="range{{.ID}}" required
+               value="{{ if .ParameterValues }}{{(index .ParameterValues 1).Value }}{{ end }}"
+        >
+        {{end}}
         {{end}}
     </div>
     {{end}}

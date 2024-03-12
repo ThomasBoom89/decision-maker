@@ -32,7 +32,7 @@ func (T *TestConfigurator) Create(valueTypeComparers map[uint]ValueTypeComparer)
 			value = T.getForString(valueTypeComparer.Value, valueTypeComparer.Comparer)
 		case Float:
 			value = T.getForFloat(valueTypeComparer.Value, valueTypeComparer.Comparer)
-		case DateTime:
+		case DateTime, Date, Time:
 			value = T.getForInteger(valueTypeComparer.Value, valueTypeComparer.Comparer)
 		default:
 			panic("nope")

@@ -67,20 +67,14 @@ func (P *Product) SetUpRoutes() {
 					maxValue := value
 					minValue.Value = splittedValue[0]
 					maxValue.Value = splittedValue[1]
-					if parameter.Type == decision.DateTime {
-						minValue.Value = P.getDateTimeFormat(splittedValue[0])
-						maxValue.Value = P.getDateTimeFormat(splittedValue[1])
-					}
+					minValue.Value = P.getParameterFormat(splittedValue[0], parameter.Type)
+					maxValue.Value = P.getParameterFormat(splittedValue[1], parameter.Type)
 					parameters[key].ParameterValues = []database.ParameterValue{minValue, maxValue}
 
 					continue
 				}
-
-				if parameter.Type == decision.DateTime {
-					value.Value = P.getDateTimeFormat(value.Value)
-				}
+				value.Value = P.getParameterFormat(value.Value, parameter.Type)
 				parameters[key].ParameterValues = []database.ParameterValue{value}
-
 			}
 		}
 
@@ -122,15 +116,9 @@ func (P *Product) SetUpRoutes() {
 		for _, parameter := range configuration.Parameters {
 			parameterId := strconv.Itoa(int(parameter.ID))
 			parameterValue := ctx.FormValue("parameter" + parameterId)
-			if parameter.Type == decision.DateTime {
-				parameterValue = P.getParsedUnixTime(parameterValue)
-			}
+			parameterValue = P.getParsedParameter(parameterValue, parameter.Type)
 			if parameter.Comparer == decision.Range {
-				if parameter.Type == decision.DateTime {
-					parameterValue += decision.RangeSeparator + P.getParsedUnixTime(ctx.FormValue("range"+parameterId))
-				} else {
-					parameterValue += decision.RangeSeparator + ctx.FormValue("range"+parameterId)
-				}
+				parameterValue += decision.RangeSeparator + P.getParsedParameter(ctx.FormValue("range"+parameterId), parameter.Type)
 			}
 			parameterMap[parameter.ID] = parameterValue
 			values[parameter.ID] = decision.ValueTypeComparer{
@@ -169,22 +157,60 @@ func (P *Product) SetUpRoutes() {
 	})
 }
 
-func (P *Product) getDateTimeFormat(datetime string) string {
-	timestamp, err := strconv.Atoi(datetime)
-	if err != nil {
-		panic(err)
-	}
+func (P *Product) getParameterFormat(parameterValue string, parameterType string) string {
+	switch parameterType {
+	case decision.DateTime:
+		timestamp, err := strconv.Atoi(parameterValue)
+		if err != nil {
+			panic(err)
+		}
 
-	return time.Unix(int64(timestamp), 0).Format("2006-01-02T15:04")
+		return time.Unix(int64(timestamp), 0).Format("2006-01-02T15:04")
+	case decision.Date:
+		timestamp, err := strconv.Atoi(parameterValue)
+		if err != nil {
+			panic(err)
+		}
+
+		return time.Unix(int64(timestamp), 0).Format("2006-01-02")
+	case decision.Time:
+		timestamp, err := strconv.Atoi(parameterValue)
+		if err != nil {
+			panic(err)
+		}
+
+		return time.Unix(int64(timestamp), 0).Format("15:04")
+	default:
+		return parameterValue
+	}
 }
 
-func (P *Product) getParsedUnixTime(parameterValue string) string {
-	dateTime, err := time.Parse("2006-01-02T15:04", parameterValue)
-	if err != nil {
-		panic(err)
-	}
+func (P *Product) getParsedParameter(parameterValue string, parameterType string) string {
+	switch parameterType {
+	case decision.DateTime:
+		dateTime, err := time.Parse("2006-01-02T15:04", parameterValue)
+		if err != nil {
+			panic(err)
+		}
 
-	return strconv.Itoa(int(dateTime.Unix()))
+		return strconv.Itoa(int(dateTime.Unix()))
+	case decision.Date:
+		date, err := time.Parse("2006-01-02", parameterValue)
+		if err != nil {
+			panic(err)
+		}
+
+		return strconv.Itoa(int(date.Unix()))
+	case decision.Time:
+		time, err := time.Parse("15:04", parameterValue)
+		if err != nil {
+			panic(err)
+		}
+
+		return strconv.Itoa(int(time.Unix()))
+	default:
+		return parameterValue
+	}
 }
 
 /*
