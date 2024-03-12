@@ -6,6 +6,7 @@ import (
 	"github.com/ThomasBoom89/decision-maker/internal/decision"
 	"github.com/gofiber/fiber/v2"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -60,12 +61,23 @@ func (P *Product) SetUpRoutes() {
 		parameters := configuration.Parameters
 		for key, parameter := range parameters {
 			if value, ok := parameterValues[parameter.ID]; ok {
-				if parameter.Type == decision.DateTime {
-					timestamp, err := strconv.Atoi(value.Value)
-					if err != nil {
-						panic(err)
+				if parameter.Comparer == decision.Range {
+					splittedValue := strings.Split(value.Value, decision.RangeSeparator)
+					minValue := value
+					maxValue := value
+					minValue.Value = splittedValue[0]
+					maxValue.Value = splittedValue[1]
+					if parameter.Type == decision.DateTime {
+						minValue.Value = P.getDateTimeFormat(splittedValue[0])
+						maxValue.Value = P.getDateTimeFormat(splittedValue[1])
 					}
-					value.Value = time.Unix(int64(timestamp), 0).Format("2006-01-02T15:04")
+					parameters[key].ParameterValues = []database.ParameterValue{minValue, maxValue}
+
+					continue
+				}
+
+				if parameter.Type == decision.DateTime {
+					value.Value = P.getDateTimeFormat(value.Value)
 				}
 				parameters[key].ParameterValues = []database.ParameterValue{value}
 
@@ -155,6 +167,15 @@ func (P *Product) SetUpRoutes() {
 			"Insert":                         insert,
 		})
 	})
+}
+
+func (P *Product) getDateTimeFormat(datetime string) string {
+	timestamp, err := strconv.Atoi(datetime)
+	if err != nil {
+		panic(err)
+	}
+
+	return time.Unix(int64(timestamp), 0).Format("2006-01-02T15:04")
 }
 
 func (P *Product) getParsedUnixTime(parameterValue string) string {

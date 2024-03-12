@@ -1,6 +1,6 @@
 {{template "index" .}}
 
-<form hx-post="/product/save/{{.ID}}" hx-target="#output" class="flex flex-col max-w-[38%] m-auto">
+<form hx-post="/product/save/{{.ID}}" hx-target="#output" class="flex flex-col max-w-[42%] m-auto">
     <label for="name">Name: </label>
     <input type="text" name="name" id="name" placeholder="insert name..." value="{{.Name}}" required>
     <label for="version">Version: </label>
@@ -20,10 +20,10 @@
         {{ if eq .Comparer "range" }}
             {{ if eq .Type "datetime" }}
             <input class="ml-2 w-full" type="datetime-local" name="range{{.ID}}" id="range{{.ID}}" required
-                   value="{{ if .ParameterValues }}{{(index .ParameterValues 0).Value }}{{ end }}">
+                   value="{{ if .ParameterValues }}{{(index .ParameterValues 1).Value }}{{ end }}">
             {{ else }}
             <input class="ml-2 w-full" type="text" name="range{{.ID}}" id="range{{.ID}}" required
-                   value="{{ if .ParameterValues }}{{(index .ParameterValues 0).Value }}{{ end }}"
+                   value="{{ if .ParameterValues }}{{(index .ParameterValues 1).Value }}{{ end }}"
             >
             {{end}}
         {{end}}
