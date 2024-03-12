@@ -126,12 +126,13 @@ func (D *TestConfigurationEqualCompare[T]) CompareEqual(schmalue T, value T, com
 func GetCompareTypes() map[string][]Compare {
 	fullCompare := []Compare{GreaterThan, GreaterEqual, LowerThan, LowerEqual, Equal, NotEqual, Range}
 	equalCompare := []Compare{Equal, NotEqual}
+	stringCompare := []Compare{Equal, NotEqual}
 
 	return map[string][]Compare{
 		Float:    fullCompare,
 		Integer:  fullCompare,
 		DateTime: fullCompare,
-		String:   equalCompare,
+		String:   stringCompare,
 		Boolean:  equalCompare,
 		Time:     fullCompare,
 		Date:     fullCompare,

@@ -131,10 +131,26 @@ func (C *Configuration) SetUpRoutes() {
 	})
 }
 
-func (C *Configuration) getCompareTypes() []string {
-	return []string{"gt", "ge", "lt", "le", "eq", "ne", "range"}
+func (C *Configuration) getCompareTypes() []decision.Compare {
+	return []decision.Compare{
+		decision.GreaterThan,
+		decision.GreaterEqual,
+		decision.LowerThan,
+		decision.LowerEqual,
+		decision.Equal,
+		decision.NotEqual,
+		decision.Range,
+	}
 }
 
 func (C *Configuration) getParameterTypes() []string {
-	return []string{"int", "string", "float", "datetime", "bool", "time", "date"}
+	return []string{
+		decision.Integer,
+		decision.String,
+		decision.Float,
+		decision.DateTime,
+		decision.Boolean,
+		decision.Time,
+		decision.Date,
+	}
 }
