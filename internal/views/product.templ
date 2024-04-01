@@ -1,0 +1,49 @@
+package views
+
+import(
+	"github.com/ThomasBoom89/decision-maker/internal/database"
+	"fmt"
+)
+
+type Product struct{
+}
+
+templ (P *Product) Overview(version int, products []database.Product){
+    @Index(P.overviewTable(version, products), "Product Overview")
+}
+
+templ (P *Product) overviewTable(version int, products []database.Product){
+<section class="text-center flex flex-col w-full">
+    <h1>Configuration-Version: {fmt.Sprint(version)}</h1>
+    <h1>Products:</h1>
+    <table class="m-auto max-w-[40%] table-auto">
+        <tr>
+            <th>Name</th>
+<!--            <th>Status</th>-->
+            <th></th>
+            <th></th>
+        </tr>
+        for _, product := range products {
+            @P.overviewTableRow(product)
+        }
+    </table>
+    <a href={ templ.URL(fmt.Sprintf("/product/new/%d", version)) }>New</a>
+</section>
+<h2>import</h2>
+}
+
+templ (P *Product) overviewTableRow(product database.Product){
+   <tr id={ fmt.Sprintf("row%d", product.ID) }>
+       <td>{ product.Name }</td>
+       <td>
+           <a href={ templ.URL(fmt.Sprintf("/product/edit/%d", product.ID)) }>
+               edit
+           </a>
+       </td>
+       <td>
+           <button hx-delete={ fmt.Sprintf("/product/%d", product.ID)} hx-target={ fmt.Sprintf("#row%d", product.ID)}>
+               delete
+           </button>
+       </td>
+   </tr>
+}

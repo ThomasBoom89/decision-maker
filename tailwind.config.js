@@ -4,6 +4,7 @@ module.exports = {
     content: [
         "./views/**/*.html",
         "./frontend/**/*.js",
+        "./internal/**/*.templ",
     ],
     theme: {
         extend: {},

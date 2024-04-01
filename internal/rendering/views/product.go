@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"github.com/ThomasBoom89/decision-maker/internal/database"
 	"github.com/ThomasBoom89/decision-maker/internal/decision"
+	"github.com/ThomasBoom89/decision-maker/internal/views"
+	"github.com/a-h/templ"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/adaptor"
 	"strconv"
 	"strings"
 	"time"
@@ -43,11 +46,10 @@ func (P *Product) SetUpRoutes() {
 		version, _ := strconv.Atoi(ctx.Params("version"))
 		configuration, _ := P.configurationRepository.GetByVersion(uint(version))
 		products, _ := P.productRepository.GetByConfiguration(configuration.ID)
+		productView := views.Product{}
+		overview := productView.Overview(version, products)
 
-		return ctx.Render("product/overview", fiber.Map{
-			"Version":  version,
-			"Products": products,
-		})
+		return adaptor.HTTPHandler(templ.Handler(overview))(ctx)
 	})
 
 	P.router.Get("/edit/:id", func(ctx *fiber.Ctx) error {

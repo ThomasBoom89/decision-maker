@@ -8,3 +8,4 @@ public/**
 !public/assets/**
 main
 .env
+internal/views/*_templ.go

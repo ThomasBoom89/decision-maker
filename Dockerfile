@@ -3,7 +3,9 @@ FROM golang:1.22-alpine3.19 AS Builder
 WORKDIR /app
 COPY . .
 
+RUN go install github.com/a-h/templ/cmd/templ@latest
 RUN go get -d ./...
+RUN templ generate
 RUN CGO_ENABLED=0 GOOS=linux GARCH=amd64 go build -o decision-maker ./src/main.go
 
 FROM node:20 AS FE-Builder
@@ -28,6 +30,7 @@ CMD ["./decision-maker"]
 
 FROM golang:1.22-alpine3.19 AS Development
 
+RUN go install github.com/a-h/templ/cmd/templ@latest
 RUN go install github.com/cosmtrek/air@v1.51.0
 RUN go install github.com/go-delve/delve/cmd/dlv@v1.22.1
 

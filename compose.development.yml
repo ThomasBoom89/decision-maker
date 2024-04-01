@@ -28,6 +28,7 @@ services:
   decision-maker-frontend-watcher:
     container_name: decision-maker-frontend-watcher
     restart: always
+    tty: true
     build:
       target: Frontend-Development
     volumes:
