@@ -3,6 +3,7 @@ package rendering
 import (
 	"github.com/ThomasBoom89/decision-maker/internal/database"
 	"github.com/ThomasBoom89/decision-maker/internal/rendering/views"
+	views2 "github.com/ThomasBoom89/decision-maker/internal/views"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -19,7 +20,8 @@ func SetUpRoutes(
 	})
 
 	productGroup := router.Group("/product")
-	product := views.NewProduct(productGroup, productRepository, configurationRepository, testConfigurationRepository)
+	productView := &views2.Product{}
+	product := views.NewProduct(productGroup, productRepository, configurationRepository, testConfigurationRepository, productView)
 	product.SetUpRoutes()
 
 	configurationGroup := router.Group("/configuration")

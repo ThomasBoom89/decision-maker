@@ -18,6 +18,7 @@ type Product struct {
 	productRepository           *database.ProductRepository
 	configurationRepository     *database.ConfigurationRepository
 	testConfigurationRepository *database.TestConfigurationRepository
+	productView                 *views.Product
 }
 
 func NewProduct(
@@ -25,12 +26,14 @@ func NewProduct(
 	productRepository *database.ProductRepository,
 	configurationRepository *database.ConfigurationRepository,
 	testConfigurationRepository *database.TestConfigurationRepository,
+	productView *views.Product,
 ) *Product {
 	return &Product{
 		router:                      router,
 		productRepository:           productRepository,
 		configurationRepository:     configurationRepository,
 		testConfigurationRepository: testConfigurationRepository,
+		productView:                 productView,
 	}
 }
 
@@ -46,8 +49,7 @@ func (P *Product) SetUpRoutes() {
 		version, _ := strconv.Atoi(ctx.Params("version"))
 		configuration, _ := P.configurationRepository.GetByVersion(uint(version))
 		products, _ := P.productRepository.GetByConfiguration(configuration.ID)
-		productView := views.Product{}
-		overview := productView.Overview(version, products)
+		overview := P.productView.Overview(version, products)
 
 		return adaptor.HTTPHandler(templ.Handler(overview))(ctx)
 	})
@@ -79,23 +81,17 @@ func (P *Product) SetUpRoutes() {
 				parameters[key].ParameterValues = []database.ParameterValue{value}
 			}
 		}
+		newProduct := P.productView.New(int(configuration.Version), parameters, product.Name, int(product.ID))
 
-		return ctx.Render("product/new", fiber.Map{
-			"Parameter": parameters,
-			"Version":   configuration.Version,
-			"Name":      product.Name,
-			"ID":        product.ID,
-		})
+		return adaptor.HTTPHandler(templ.Handler(newProduct))(ctx)
 	})
 
 	P.router.Get("/new/:version", func(ctx *fiber.Ctx) error {
 		version, _ := strconv.Atoi(ctx.Params("version"))
 		configuration, _ := P.configurationRepository.GetByVersion(uint(version))
+		newProduct := P.productView.New(version, configuration.Parameters, "", 0)
 
-		return ctx.Render("product/new", fiber.Map{
-			"Parameter": configuration.Parameters,
-			"Version":   version,
-		})
+		return adaptor.HTTPHandler(templ.Handler(newProduct))(ctx)
 	})
 
 	P.router.Post("/save/:id?", func(ctx *fiber.Ctx) error {

@@ -2,6 +2,7 @@ package views
 
 import(
 	"github.com/ThomasBoom89/decision-maker/internal/database"
+	"github.com/ThomasBoom89/decision-maker/internal/decision"
 	"fmt"
 )
 
@@ -10,6 +11,10 @@ type Product struct{
 
 templ (P *Product) Overview(version int, products []database.Product){
     @Index(P.overviewTable(version, products), "Product Overview")
+}
+
+templ (P *Product) New(version int, parameters []database.Parameter, name string, productId int){
+    @Index(P.newForm(version, parameters, name, productId), "New Product")
 }
 
 templ (P *Product) overviewTable(version int, products []database.Product){
@@ -46,4 +51,51 @@ templ (P *Product) overviewTableRow(product database.Product){
            </button>
        </td>
    </tr>
+}
+
+templ (P *Product) newForm(version int, paramters []database.Parameter, name string, productId int){
+<form hx-post={fmt.Sprintf("/product/save/%d", productId)} hx-target="#output" class="flex flex-col max-w-[42%] m-auto">
+    <label for="name">Name: </label>
+    <input type="text" name="name" id="name" placeholder="insert name..." value={name} required></input>
+    <label for="version">Version: </label>
+    <input type="text" name="version" id="version" value={fmt.Sprintf("%d", version)}></input>
+        for _, parameter := range paramters {
+            <label for={fmt.Sprintf("%d", parameter.ID)}>{fmt.Sprintf("%s-%s-%s", parameter.Name, parameter.Type, parameter.Comparer)}</label>
+            <div class="flex flex-row w-full">
+                @P.newFormParameter(parameter)
+            </div>
+        }
+    <input type="submit" value="save"></input>
+</form>
+<div id="output"></div>
+}
+
+templ (P *Product) newFormParameter(parameter database.Parameter){
+    <input class="w-full" type={P.getParameterType(parameter.Type)} name={fmt.Sprintf("parameter%d", parameter.ID)}
+           id={fmt.Sprintf("parameter%d", parameter.ID)} required
+           value={P.getParameterValue(parameter)}
+    ></input>
+    if parameter.Comparer == decision.Range{
+        <input class="w-full" type={P.getParameterType(parameter.Type)} name={fmt.Sprintf("range%d", parameter.ID)}
+               id={fmt.Sprintf("range%d", parameter.ID)} required
+               value={P.getParameterValue(parameter)}
+        ></input>
+    }
+}
+
+func (P *Product) getParameterValue(parameter database.Parameter) string {
+    if parameter.ParameterValues != nil {
+        return parameter.ParameterValues[0].Value
+    }
+
+    return ""
+}
+
+func (P *Product) getParameterType(parameterType string) string {
+    switch parameterType {
+        case decision.DateTime: return "datetime-local"
+        case decision.Time: return "time"
+        case decision.Date: return "date"
+        default: return "text"
+    }
 }
