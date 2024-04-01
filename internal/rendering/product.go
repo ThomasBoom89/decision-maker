@@ -1,10 +1,11 @@
-package views
+package rendering
 
 import (
 	"fmt"
 	"github.com/ThomasBoom89/decision-maker/internal/database"
 	"github.com/ThomasBoom89/decision-maker/internal/decision"
-	"github.com/ThomasBoom89/decision-maker/internal/views"
+	"github.com/ThomasBoom89/decision-maker/internal/rendering/dto"
+	"github.com/ThomasBoom89/decision-maker/internal/rendering/views"
 	"github.com/a-h/templ"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
@@ -146,12 +147,9 @@ func (P *Product) SetUpRoutes() {
 			}
 		}
 
-		return ctx.Render("product/diff", fiber.Map{
-			"TestConfiguration":              testConfiguration,
-			"TestConfigurationOldProducts":   testConfigurationOldProducts,
-			"OldTestConfigurationNewProduct": oldTestConfigurationNewProduct,
-			"Insert":                         insert,
-		})
+		diff := P.productView.Diff(testConfiguration, testConfigurationOldProducts, oldTestConfigurationNewProduct, insert)
+
+		return adaptor.HTTPHandler(templ.Handler(diff))(ctx)
 	})
 }
 
@@ -214,10 +212,10 @@ func (P *Product) getParsedParameter(parameterValue string, parameterType string
 /*
 Check if test configuration of new product will collide with existing product
 */
-func (P *Product) foobar(products []database.Product, parametersMap map[uint]decision.ValueTypeComparer, testConfiguration map[string]string) map[string][]Result {
+func (P *Product) foobar(products []database.Product, parametersMap map[uint]decision.ValueTypeComparer, testConfiguration map[string]string) map[string][]dto.Result {
 	decisionMaker := decision.NewMakerForTestConfiguration()
 
-	result := make(map[string][]Result)
+	result := make(map[string][]dto.Result)
 	for _, product := range products {
 		if len(product.ParameterValues) == 0 {
 			continue
@@ -228,7 +226,7 @@ func (P *Product) foobar(products []database.Product, parametersMap map[uint]dec
 			if decisionResult == false {
 				continue
 			}
-			result[product.Name] = append(result[product.Name], Result{
+			result[product.Name] = append(result[product.Name], dto.Result{
 				ParameterName: compareType.Name,
 				TestValue:     testConfiguration[compareType.Name],
 				ProductValue:  parameterValue.Value,
@@ -250,13 +248,13 @@ func (P *Product) foobar(products []database.Product, parametersMap map[uint]dec
 *
 Check if existing test configurations will match new product
 */
-func (P *Product) foobarfoo(products []database.Product, comparerMap map[uint]decision.ValueTypeComparer) map[string][]Result {
+func (P *Product) foobarfoo(products []database.Product, comparerMap map[uint]decision.ValueTypeComparer) map[string][]dto.Result {
 	decisionMaker := decision.NewMakerForTestConfiguration()
 	productsMap := make(map[uint]string)
 	for _, product := range products {
 		productsMap[product.ID] = product.Name
 	}
-	result := make(map[string][]Result)
+	result := make(map[string][]dto.Result)
 	for _, product := range products {
 		for key, parameter := range comparerMap {
 			comparer := comparerMap[key]
@@ -264,7 +262,7 @@ func (P *Product) foobarfoo(products []database.Product, comparerMap map[uint]de
 			if decisionResult == false {
 				continue
 			}
-			result[productsMap[product.TestConfiguration.ProductID]] = append(result[productsMap[product.TestConfiguration.ProductID]], Result{
+			result[productsMap[product.TestConfiguration.ProductID]] = append(result[productsMap[product.TestConfiguration.ProductID]], dto.Result{
 				ParameterName: parameter.Name,
 				TestValue:     product.TestConfiguration.Configuration[comparer.Name],
 				ProductValue:  comparer.Value,
@@ -326,13 +324,4 @@ func (P *Product) barfoo(configuration *database.Configuration) {
 		}
 	}
 
-}
-
-type Result struct {
-	ParameterName string
-	TestValue     string
-	ProductValue  string
-	CompareType   string
-	Comparer      decision.Compare
-	Result        bool
 }

@@ -3,6 +3,7 @@ package views
 import(
 	"github.com/ThomasBoom89/decision-maker/internal/database"
 	"github.com/ThomasBoom89/decision-maker/internal/decision"
+	"github.com/ThomasBoom89/decision-maker/internal/rendering/dto"
 	"fmt"
 )
 
@@ -15,6 +16,38 @@ templ (P *Product) Overview(version int, products []database.Product){
 
 templ (P *Product) New(version int, parameters []database.Parameter, name string, productId int){
     @Index(P.newForm(version, parameters, name, productId), "New Product")
+}
+
+templ (P *Product) Diff(testConfiguration map[string]string, testConfigurationOldProducts map[string][]dto.Result, oldTestConfigurationNewProduct map[string][]dto.Result, insert bool){
+    <div>
+        <section>
+            <h2>Test Configuration</h2>
+            for key, value := range testConfiguration{
+                <p>{fmt.Sprintf("%s-%s", key, value)}</p>
+            }
+        </section>
+        <section>
+            <h2>Test Configuration Old Products</h2>
+            for key, value := range testConfigurationOldProducts {
+                <p>{key}</p>
+                for _, value1 := range value {
+                    <p>{fmt.Sprintf("%s-%s-%s-%s-%s-%t",value1.ParameterName, value1.TestValue, value1.ProductValue, value1.CompareType, value1.Comparer, value1.Result)}</p>
+                }
+            }
+        </section>
+        <section>
+            <h2>Old Configuration New Products</h2>
+            for key, value := range oldTestConfigurationNewProduct {
+                <p>{key}</p>
+                for _, value1 := range value {
+                    <p>{fmt.Sprintf("%s-%s-%s-%s-%s-%t",value1.ParameterName, value1.TestValue, value1.ProductValue, value1.CompareType, value1.Comparer, value1.Result)}</p>
+                }
+            }
+        </section>
+        <section>
+            Insert: {fmt.Sprintf("%t",insert)}
+        </section>
+    </div>
 }
 
 templ (P *Product) overviewTable(version int, products []database.Product){

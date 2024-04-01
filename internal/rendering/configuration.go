@@ -1,4 +1,4 @@
-package views
+package rendering
 
 import (
 	"fmt"
