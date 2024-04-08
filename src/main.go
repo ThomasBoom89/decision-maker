@@ -10,7 +10,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/gofiber/template/html/v2"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
@@ -20,11 +19,8 @@ func main() {
 	loader := configuration.Loader{}
 	databaseConfiguration := loader.LoadDatabaseConfiguration()
 
-	engine := html.New("./views", ".html")
-
 	app := fiber.New(fiber.Config{
-		Views:             engine,
-		EnablePrintRoutes: true,
+		EnablePrintRoutes: false,
 	})
 
 	// middleware

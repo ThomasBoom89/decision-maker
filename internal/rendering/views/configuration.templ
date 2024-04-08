@@ -16,8 +16,8 @@ templ (C *Configuration) Overview(configurations []database.Configuration){
     @Index(C.overviewTable(configurations),"Configuration Overview")
 }
 
-templ (C *Configuration) Edit(parameterTypes []string, compareTypes []decision.Compare, configurationVersion uint){
-    @Index(C.editForm(parameterTypes, compareTypes, int(configurationVersion)), "Edit configuration")
+templ (C *Configuration) Edit(parameterTypes []string, compareTypes []decision.Compare, configuration database.Configuration){
+    @Index(C.EditForm(parameterTypes, compareTypes, configuration), "Edit configuration")
 }
 
 templ (C *Configuration) Show(configuration database.Configuration){
@@ -115,9 +115,10 @@ templ (C *Configuration) GetCompareTypeSelect(compareTypes []decision.Compare){
 
 }
 
-templ (C *Configuration) editForm(parameterTypes []string, compareTypes []decision.Compare, configurationVersion int){
+templ (C *Configuration) EditForm(parameterTypes []string, compareTypes []decision.Compare, configuration database.Configuration){
     <section id="configuration_edit">
-        <form hx-post={fmt.Sprintf("/configuration/create/parameter/%d",configurationVersion)} hx-target="#configuration_edit"
+        @C.configuration(configuration)
+        <form hx-post={fmt.Sprintf("/configuration/create/parameter/%d",configuration.Version)} hx-target="#configuration_edit"
               class="flex flex-row gap-2">
             <label for="name">Name:</label>
             <input type="text" name="name" id="name" placeholder="insert name..."></input>

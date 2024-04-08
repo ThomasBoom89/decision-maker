@@ -28,7 +28,9 @@ func NewConfiguration(router fiber.Router, configurationRepository *database.Con
 func (C *Configuration) SetUpRoutes() {
 
 	C.router.Get("/new", func(ctx *fiber.Ctx) error {
-		editConfiguration := C.configurationView.Edit(C.getParameterTypes(), C.getCompareTypes(), 1)
+		configuration := database.Configuration{}
+		configuration.ID = 1
+		editConfiguration := C.configurationView.Edit(C.getParameterTypes(), C.getCompareTypes(), configuration)
 
 		return adaptor.HTTPHandler(templ.Handler(editConfiguration))(ctx)
 	})
@@ -81,7 +83,7 @@ func (C *Configuration) SetUpRoutes() {
 		if configuration.Active {
 			return ctx.Redirect("/configuration/overview", 302)
 		}
-		editConfiguration := C.configurationView.Edit(C.getParameterTypes(), C.getCompareTypes(), configuration.Version)
+		editConfiguration := C.configurationView.Edit(C.getParameterTypes(), C.getCompareTypes(), *configuration)
 
 		return adaptor.HTTPHandler(templ.Handler(editConfiguration))(ctx)
 	})
@@ -116,7 +118,7 @@ func (C *Configuration) SetUpRoutes() {
 			configuration, _ = C.configurationRepository.GetByVersion(uint(version))
 		}
 		configuration, _ = C.configurationRepository.AppendParameter(configuration, name, parameterType, comparerType)
-		editConfiguration := C.configurationView.Edit(C.getParameterTypes(), C.getCompareTypes(), configuration.Version)
+		editConfiguration := C.configurationView.EditForm(C.getParameterTypes(), C.getCompareTypes(), *configuration)
 
 		return adaptor.HTTPHandler(templ.Handler(editConfiguration))(ctx)
 	})
