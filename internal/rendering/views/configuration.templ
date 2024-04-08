@@ -9,9 +9,6 @@ import(
 type Configuration struct{
 }
 
-templ (C *Configuration) New(parameterTypes []string, compareTypes []decision.Compare){
-}
-
 templ (C *Configuration) Overview(configurations []database.Configuration){
     @Index(C.overviewTable(configurations),"Configuration Overview")
 }
@@ -22,7 +19,6 @@ templ (C *Configuration) Edit(parameterTypes []string, compareTypes []decision.C
 
 templ (C *Configuration) Show(configuration database.Configuration){
     @Index(C.configuration(configuration), "Configuration")
-
 }
 
 func (C *Configuration) getActiveState(active bool) string {
