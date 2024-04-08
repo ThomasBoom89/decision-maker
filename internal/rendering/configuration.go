@@ -4,31 +4,33 @@ import (
 	"fmt"
 	"github.com/ThomasBoom89/decision-maker/internal/database"
 	"github.com/ThomasBoom89/decision-maker/internal/decision"
+	"github.com/ThomasBoom89/decision-maker/internal/rendering/views"
+	"github.com/a-h/templ"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/adaptor"
 	"strconv"
 )
 
 type Configuration struct {
 	router                  fiber.Router
 	configurationRepository *database.ConfigurationRepository
+	configurationView       *views.Configuration
 }
 
-func NewConfiguration(router fiber.Router, configurationRepository *database.ConfigurationRepository) *Configuration {
+func NewConfiguration(router fiber.Router, configurationRepository *database.ConfigurationRepository, configurationView *views.Configuration) *Configuration {
 	return &Configuration{
 		router:                  router,
 		configurationRepository: configurationRepository,
+		configurationView:       configurationView,
 	}
 }
 
 func (C *Configuration) SetUpRoutes() {
 
 	C.router.Get("/new", func(ctx *fiber.Ctx) error {
+		editConfiguration := C.configurationView.Edit(C.getParameterTypes(), C.getCompareTypes(), 1)
 
-		return ctx.Render("configuration/new", fiber.Map{
-			"Title":          "New Configuration",
-			"ParameterTypes": C.getParameterTypes(),
-			"CompareTypes":   C.getCompareTypes(),
-		})
+		return adaptor.HTTPHandler(templ.Handler(editConfiguration))(ctx)
 	})
 
 	C.router.Delete("/:id", func(ctx *fiber.Ctx) error {
@@ -57,11 +59,9 @@ func (C *Configuration) SetUpRoutes() {
 	C.router.Get("/show/:version", func(ctx *fiber.Ctx) error {
 		version, _ := strconv.Atoi(ctx.Params("version"))
 		configuration, _ := C.configurationRepository.GetByVersion(uint(version))
+		showConfiguration := C.configurationView.Show(*configuration)
 
-		return ctx.Render("configuration/show", fiber.Map{
-			"Title":         "Show",
-			"Configuration": configuration,
-		})
+		return adaptor.HTTPHandler(templ.Handler(showConfiguration))(ctx)
 	})
 
 	C.router.Get("/overview", func(ctx *fiber.Ctx) error {
@@ -70,9 +70,9 @@ func (C *Configuration) SetUpRoutes() {
 			return err
 		}
 
-		return ctx.Render("configuration/overview", fiber.Map{
-			"Configurations": configurations,
-		})
+		overview := C.configurationView.Overview(configurations)
+
+		return adaptor.HTTPHandler(templ.Handler(overview))(ctx)
 	})
 
 	C.router.Get("/edit/:version", func(ctx *fiber.Ctx) error {
@@ -81,31 +81,26 @@ func (C *Configuration) SetUpRoutes() {
 		if configuration.Active {
 			return ctx.Redirect("/configuration/overview", 302)
 		}
+		editConfiguration := C.configurationView.Edit(C.getParameterTypes(), C.getCompareTypes(), configuration.Version)
 
-		return ctx.Render("configuration/edit", fiber.Map{
-			"Title":          "Edit configuration",
-			"ParameterTypes": C.getParameterTypes(),
-			"CompareTypes":   C.getCompareTypes(),
-			"Configuration":  configuration,
-		})
+		return adaptor.HTTPHandler(templ.Handler(editConfiguration))(ctx)
 	})
 
 	C.router.Get("/status/change/:version", func(ctx *fiber.Ctx) error {
 		version, _ := strconv.Atoi(ctx.Params("version"))
 		configuration, _ := C.configurationRepository.GetByVersion(uint(version))
 		configuration, _ = C.configurationRepository.UpdateStatus(configuration)
-		return ctx.Render("configuration/overview_row", fiber.Map{
-			"Version": configuration.Version,
-			"Active":  configuration.Active,
-		})
+		overviewTableRow := C.configurationView.OverviewTableRow(*configuration)
+
+		return adaptor.HTTPHandler(templ.Handler(overviewTableRow))(ctx)
 	})
 
 	C.router.Get("/comparer", func(ctx *fiber.Ctx) error {
 		parameterType := ctx.Query("type")
 		compareTypes := decision.GetCompareTypes()
-		return ctx.Render("configuration/parameter_compare", fiber.Map{
-			"CompareTypes": compareTypes[parameterType],
-		})
+		compareSelect := C.configurationView.GetCompareTypeSelect(compareTypes[parameterType])
+
+		return adaptor.HTTPHandler(templ.Handler(compareSelect))(ctx)
 	})
 
 	C.router.Post("/create/parameter/:version?", func(ctx *fiber.Ctx) error {
@@ -121,13 +116,9 @@ func (C *Configuration) SetUpRoutes() {
 			configuration, _ = C.configurationRepository.GetByVersion(uint(version))
 		}
 		configuration, _ = C.configurationRepository.AppendParameter(configuration, name, parameterType, comparerType)
+		editConfiguration := C.configurationView.Edit(C.getParameterTypes(), C.getCompareTypes(), configuration.Version)
 
-		return ctx.Render("configuration/edit_form", fiber.Map{
-			"Title":          "Edit configuration",
-			"ParameterTypes": C.getParameterTypes(),
-			"CompareTypes":   C.getCompareTypes(),
-			"Configuration":  configuration,
-		})
+		return adaptor.HTTPHandler(templ.Handler(editConfiguration))(ctx)
 	})
 }
 

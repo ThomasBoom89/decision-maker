@@ -1,0 +1,137 @@
+package views
+
+import(
+    "github.com/ThomasBoom89/decision-maker/internal/decision"
+    "github.com/ThomasBoom89/decision-maker/internal/database"
+    "fmt"
+)
+
+type Configuration struct{
+}
+
+templ (C *Configuration) New(parameterTypes []string, compareTypes []decision.Compare){
+}
+
+templ (C *Configuration) Overview(configurations []database.Configuration){
+    @Index(C.overviewTable(configurations),"Configuration Overview")
+}
+
+templ (C *Configuration) Edit(parameterTypes []string, compareTypes []decision.Compare, configurationVersion uint){
+    @Index(C.editForm(parameterTypes, compareTypes, int(configurationVersion)), "Edit configuration")
+}
+
+templ (C *Configuration) Show(configuration database.Configuration){
+    @Index(C.configuration(configuration), "Configuration")
+
+}
+
+func (C *Configuration) getActiveState(active bool) string {
+    if active {
+        return "active"
+    }
+
+    return "inactive"
+}
+
+templ (C *Configuration) overviewTable(configurations []database.Configuration){
+    <section class="text-center flex flex-col w-full">
+        <h1>Configurations</h1>
+        <table class="m-auto max-w-[40%] table-auto">
+            <tr>
+                <th>Version</th>
+                <th>Status</th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+            </tr>
+            for _, configuration := range configurations {
+                @C.OverviewTableRow(configuration)
+            }
+        </table>
+        if len(configurations) <= 0 {
+            <a href="/configuration/new">New</a>
+        }
+    </section>
+}
+
+templ (C *Configuration) OverviewTableRow(configuration database.Configuration){
+    <tr id={fmt.Sprintf("row%d", configuration.ID)}>
+        <td>{fmt.Sprint(configuration.Version)}</td>
+        <td>{C.getActiveState(configuration.Active)}</td>
+        <td>
+            <a href={templ.URL(fmt.Sprintf("/configuration/edit/%d", configuration.Version))} class={templ.KV("pointer-events-none bg-red-500", configuration.Active == true)}>
+                edit
+            </a>
+        </td>
+        <td>
+            <button hx-get={fmt.Sprintf("/configuration/status/change/%d", configuration.Version)}
+                    hx-target={fmt.Sprintf("#row%d",configuration.ID)}
+                    hx-swap="outerHTML"
+            > {C.getActiveState(!configuration.Active)}
+            </button>
+        </td>
+        <td>
+            <a href={templ.URL(fmt.Sprintf("/configuration/show/%d", configuration.Version))}>
+                show
+            </a>
+        </td>
+        <td>
+            <a href={templ.URL(fmt.Sprintf("/configuration/copy/%d",configuration.Version))}>
+                copy
+            </a>
+        </td>
+        <td>
+            <button hx-delete={fmt.Sprintf("/configuration/%d",configuration.ID)} hx-target={fmt.Sprintf("#row%d", configuration.ID)}>
+                delete
+            </button>
+        </td>
+        <td>
+            <a href={templ.URL(fmt.Sprintf("/product/overview/%d", configuration.Version))}>
+                to products
+            </a>
+        </td>
+    </tr>
+}
+
+templ (C *Configuration) configuration(configuration database.Configuration){
+    <p>Aktuelle Konfiguration</p>
+    <p>Version: {fmt.Sprintf("%d",configuration.Version)}</p>
+    <p>Status: {C.getActiveState(configuration.Active)}</p>
+    for _, parameter := range configuration.Parameters{
+        <p>{fmt.Sprintf("%s %s %s", parameter.Name, parameter.Type, parameter.Comparer)}</p>
+    }
+}
+
+templ (C *Configuration) GetCompareTypeSelect(compareTypes []decision.Compare){
+<label for="comparer">Comparer:</label>
+<select name="comparer" id="comparer" required>
+    for _, compareType := range compareTypes {
+        <option value={fmt.Sprint(compareType)} >{fmt.Sprint(compareType)}</option>
+    }
+</select>
+
+}
+
+templ (C *Configuration) editForm(parameterTypes []string, compareTypes []decision.Compare, configurationVersion int){
+    <section id="configuration_edit">
+        <form hx-post={fmt.Sprintf("/configuration/create/parameter/%d",configurationVersion)} hx-target="#configuration_edit"
+              class="flex flex-row gap-2">
+            <label for="name">Name:</label>
+            <input type="text" name="name" id="name" placeholder="insert name..."></input>
+            <label for="type">Add </label>
+            <select name="type" id="type" hx-get="/configuration/comparer" hx-trigger="change" hx-swap="innerHTML"
+                    hx-target="#comparer_outlet" required>
+                for _, parameterType := range parameterTypes {
+                    <option value={parameterType}>{parameterType}</option>
+                }
+            </select>
+            <section id="comparer_outlet">
+                @C.GetCompareTypeSelect(compareTypes)
+            </section>
+            <input type="submit" value="submit"></input>
+        </form>
+    </section>
+}

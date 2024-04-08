@@ -24,6 +24,8 @@ func SetUpRoutes(
 	product.SetUpRoutes()
 
 	configurationGroup := router.Group("/configuration")
-	configuration := NewConfiguration(configurationGroup, configurationRepository)
+	configurationView := &views.Configuration{}
+	configuration := NewConfiguration(configurationGroup, configurationRepository, configurationView)
+
 	configuration.SetUpRoutes()
 }

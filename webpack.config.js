@@ -18,13 +18,6 @@ module.exports = {
         ],
     },
     plugins: [
-        new HtmlWebpackPlugin(
-            {
-                template: "./views/base.html",
-                filename: "./../views/index.html",
-                hash: true,
-            }
-        ),
         new MiniCssExtractPlugin(),
     ],
 };
