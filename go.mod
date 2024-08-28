@@ -3,7 +3,7 @@ module github.com/ThomasBoom89/decision-maker
 go 1.22
 
 require (
-	github.com/a-h/templ v0.2.747
+	github.com/a-h/templ v0.2.771
 	github.com/gofiber/fiber/v2 v2.52.5
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.11
@@ -27,7 +27,7 @@ require (
 	github.com/valyala/fasthttp v1.52.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	golang.org/x/crypto v0.21.0 // indirect
-	golang.org/x/sync v0.6.0 // indirect
-	golang.org/x/sys v0.21.0 // indirect
+	golang.org/x/sync v0.8.0 // indirect
+	golang.org/x/sys v0.23.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 )
