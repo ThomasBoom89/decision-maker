@@ -3,7 +3,7 @@ module github.com/ThomasBoom89/decision-maker
 go 1.22
 
 require (
-	github.com/a-h/templ v0.2.778
+	github.com/a-h/templ v0.2.793
 	github.com/gofiber/fiber/v2 v2.52.5
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.25.12
