@@ -1,10 +1,10 @@
 module github.com/ThomasBoom89/decision-maker
 
 go 1.22
-toolchain go1.23.4
+toolchain go1.24.1
 
 require (
-	github.com/a-h/templ v0.3.833
+	github.com/a-h/templ v0.3.856
 	github.com/gofiber/fiber/v2 v2.52.6
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.25.12
@@ -29,6 +29,6 @@ require (
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 )
