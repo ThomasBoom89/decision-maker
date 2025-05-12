@@ -1,13 +1,14 @@
 module github.com/ThomasBoom89/decision-maker
 
-go 1.22
+go 1.23.0
+
 toolchain go1.24.1
 
 require (
 	github.com/a-h/templ v0.3.856
 	github.com/gofiber/fiber/v2 v2.52.6
 	gorm.io/driver/postgres v1.5.11
-	gorm.io/gorm v1.25.12
+	gorm.io/gorm v1.26.1
 )
 
 require (
