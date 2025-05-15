@@ -5,7 +5,7 @@ go 1.23.0
 toolchain go1.24.1
 
 require (
-	github.com/a-h/templ v0.3.856
+	github.com/a-h/templ v0.3.865
 	github.com/gofiber/fiber/v2 v2.52.6
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.26.1
@@ -29,7 +29,7 @@ require (
 	github.com/valyala/fasthttp v1.52.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	golang.org/x/crypto v0.35.0 // indirect
-	golang.org/x/sync v0.11.0 // indirect
-	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/sync v0.13.0 // indirect
+	golang.org/x/sys v0.32.0 // indirect
 	golang.org/x/text v0.22.0 // indirect
 )
