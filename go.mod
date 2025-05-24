@@ -6,7 +6,7 @@ toolchain go1.24.1
 
 require (
 	github.com/a-h/templ v0.3.865
-	github.com/gofiber/fiber/v2 v2.52.6
+	github.com/gofiber/fiber/v2 v2.52.7
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.26.1
 )
