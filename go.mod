@@ -8,7 +8,7 @@ require (
 	github.com/a-h/templ v0.3.943
 	github.com/gofiber/fiber/v2 v2.52.9
 	gorm.io/driver/postgres v1.6.0
-	gorm.io/gorm v1.30.1
+	gorm.io/gorm v1.30.4
 )
 
 require (
